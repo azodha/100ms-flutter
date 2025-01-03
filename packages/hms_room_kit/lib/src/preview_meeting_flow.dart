@@ -17,10 +17,12 @@ class PreviewMeetingFlow extends StatefulWidget {
   final HMSPrebuiltOptions? prebuiltOptions;
   final HMSSDKInteractor hmsSDKInteractor;
   final String tokenData;
+  final Widget? appBar;
   const PreviewMeetingFlow(
       {super.key,
       required this.prebuiltOptions,
       required this.hmsSDKInteractor,
+      this.appBar,
       required this.tokenData});
 
   @override
@@ -32,6 +34,7 @@ class _PreviewMeetingFlowState extends State<PreviewMeetingFlow> {
 
   @override
   void initState() {
+    print('PreviewMeetingFlow is appicons null: ${widget.appBar == null}');
     super.initState();
     if (!HMSRoomLayout.skipPreview) {
       store = PreviewStore(hmsSDKInteractor: widget.hmsSDKInteractor);
@@ -49,6 +52,7 @@ class _PreviewMeetingFlowState extends State<PreviewMeetingFlow> {
             options: widget.prebuiltOptions,
             tokenData: widget.tokenData,
             hmsSDKInteractor: widget.hmsSDKInteractor,
+            appBar: widget.appBar,
           )
         : ListenableProvider.value(
             value: store,
@@ -56,6 +60,7 @@ class _PreviewMeetingFlowState extends State<PreviewMeetingFlow> {
               name: widget.prebuiltOptions?.userName ?? "",
               options: widget.prebuiltOptions,
               tokenData: widget.tokenData,
+              appBar: widget.appBar,
             ));
   }
 }

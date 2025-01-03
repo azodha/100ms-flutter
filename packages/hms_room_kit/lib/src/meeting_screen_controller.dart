@@ -58,6 +58,9 @@ class MeetingScreenController extends StatefulWidget {
 
   final bool isNoiseCancellationEnabled;
 
+  ///[appBar] are the appBar to be shown on the screen
+  final Widget? appBar;
+
   const MeetingScreenController(
       {Key? key,
       required this.user,
@@ -71,6 +74,7 @@ class MeetingScreenController extends StatefulWidget {
       this.options,
       this.tokenData,
       required this.hmsSDKInteractor,
+      this.appBar,
       this.isNoiseCancellationEnabled = false})
       : super(key: key);
 
@@ -86,6 +90,7 @@ class _MeetingScreenControllerState extends State<MeetingScreenController> {
 
   @override
   void initState() {
+    print('MeetingScreenController is appicons null: ${widget.appBar == null}');
     super.initState();
 
     ///Here we create an instance of meeting store, set initial settings and join meeting.
@@ -154,6 +159,7 @@ class _MeetingScreenControllerState extends State<MeetingScreenController> {
                           currentAudioDeviceMode: widget.currentAudioDeviceMode,
                           isNoiseCancellationEnabled:
                               widget.isNoiseCancellationEnabled,
+                              appBar: widget.appBar,
                         );
                 }),
           );

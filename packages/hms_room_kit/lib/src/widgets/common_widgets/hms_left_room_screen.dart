@@ -13,9 +13,11 @@ import 'package:hms_room_kit/src/widgets/common_widgets/hms_subheading_text.dart
 class HMSLeftRoomScreen extends StatelessWidget {
   final bool isEndRoomCalled;
   final bool doesRoleHasStreamPermission;
+  final Widget? appBar;
   const HMSLeftRoomScreen(
       {super.key,
       this.isEndRoomCalled = false,
+      this.appBar,
       this.doesRoleHasStreamPermission = false});
 
   @override
@@ -121,6 +123,7 @@ class HMSLeftRoomScreen extends StatelessWidget {
                             borderRadius: BorderRadius.circular(8.0),
                           ))),
                       onPressed: () => {
+                        print('HMSLeftRoomScreenthe appBar is ${appBar == null}'),
                             HMSThemeColors.resetLayoutColors(),
                             Navigator.pushReplacement(
                                 context,
@@ -130,6 +133,7 @@ class HMSLeftRoomScreen extends StatelessWidget {
                                           authToken: Constant.authToken,
                                           options: Constant.prebuiltOptions,
                                           onLeave: Constant.onLeave,
+                                          appBar: appBar,
                                         ))),
                           },
                       child: SizedBox(
