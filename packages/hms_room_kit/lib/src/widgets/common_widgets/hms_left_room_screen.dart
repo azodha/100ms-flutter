@@ -123,7 +123,6 @@ class HMSLeftRoomScreen extends StatelessWidget {
                             borderRadius: BorderRadius.circular(8.0),
                           ))),
                       onPressed: () => {
-                        print('HMSLeftRoomScreenthe appBar is ${appBar == null}'),
                             HMSThemeColors.resetLayoutColors(),
                             Navigator.pushReplacement(
                                 context,
