@@ -58,8 +58,6 @@ class _ScreenControllerState extends State<ScreenController> {
   void initState() {
     super.initState();
 
-    print('screen controller is appBar null: ${widget.appBar == null}');
-
     ///Setting the prebuilt options and roomCode
     Constant.prebuiltOptions = widget.options;
     Constant.roomCode = widget.roomCode;

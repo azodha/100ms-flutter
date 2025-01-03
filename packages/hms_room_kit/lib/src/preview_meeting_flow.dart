@@ -34,7 +34,6 @@ class _PreviewMeetingFlowState extends State<PreviewMeetingFlow> {
 
   @override
   void initState() {
-    print('PreviewMeetingFlow is appicons null: ${widget.appBar == null}');
     super.initState();
     if (!HMSRoomLayout.skipPreview) {
       store = PreviewStore(hmsSDKInteractor: widget.hmsSDKInteractor);

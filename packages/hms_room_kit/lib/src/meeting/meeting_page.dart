@@ -54,7 +54,6 @@ class _MeetingPageState extends State<MeetingPage> {
 
   @override
   void initState() {
-    print('MeetingPage is appicons null: ${widget.appBar == null}');
     super.initState();
     checkAudioState();
     _visibilityController = MeetingNavigationVisibilityController();

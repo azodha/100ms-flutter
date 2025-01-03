@@ -90,7 +90,6 @@ class _MeetingScreenControllerState extends State<MeetingScreenController> {
 
   @override
   void initState() {
-    print('MeetingScreenController is appicons null: ${widget.appBar == null}');
     super.initState();
 
     ///Here we create an instance of meeting store, set initial settings and join meeting.
