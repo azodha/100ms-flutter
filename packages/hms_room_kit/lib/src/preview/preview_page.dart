@@ -27,11 +27,13 @@ class PreviewPage extends StatefulWidget {
   final String name;
   final HMSPrebuiltOptions? options;
   final String tokenData;
+  final Widget? appBar;
 
   const PreviewPage(
       {super.key,
       required this.name,
       required this.options,
+      this.appBar,
       required this.tokenData});
   @override
   State<PreviewPage> createState() => _PreviewPageState();
@@ -78,6 +80,7 @@ class _PreviewPageState extends State<PreviewPage> {
               hmsSDKInteractor: previewStore.hmsSDKInteractor,
               isNoiseCancellationEnabled:
                   previewStore.isNoiseCancellationEnabled,
+              appBar: widget.appBar,
             )));
   }
 

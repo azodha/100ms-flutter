@@ -32,12 +32,16 @@ class HMSPrebuilt extends StatelessWidget {
   ///in addition to leaving the room when the leave room button is pressed
   final Function? onLeave;
 
+  ///The app bar to be shown on the screen
+  final Widget? appBar;
+
   ///The key for the widget
   HMSPrebuilt(
       {super.key,
       required this.roomCode,
       this.options,
       this.onLeave,
+      this.appBar,
       this.authToken}) {
     if (roomCode == null && authToken == null) {
       throw ArgumentError.notNull(
@@ -64,6 +68,7 @@ class HMSPrebuilt extends StatelessWidget {
       authToken: authToken,
       options: options,
       onLeave: onLeave,
+      appBar: appBar,
     );
   }
 }

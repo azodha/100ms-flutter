@@ -33,11 +33,15 @@ class ScreenController extends StatefulWidget {
   ///in addition to leaving the room when the leave room button is pressed
   final Function? onLeave;
 
+  ///The app bar to be shown on the screen
+  final Widget? appBar;
+
   const ScreenController(
       {super.key,
       required this.roomCode,
       this.options,
       this.onLeave,
+      this.appBar,
       this.authToken});
   @override
   State<ScreenController> createState() => _ScreenControllerState();
@@ -202,6 +206,7 @@ class _ScreenControllerState extends State<ScreenController> {
                   prebuiltOptions: widget.options,
                   hmsSDKInteractor: _hmsSDKInteractor,
                   tokenData: tokenData,
+                  appBar: widget.appBar,
                 )
               : PreviewPermissions(
                   options: widget.options,
