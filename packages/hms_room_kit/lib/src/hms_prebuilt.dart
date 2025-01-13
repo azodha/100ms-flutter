@@ -35,6 +35,8 @@ class HMSPrebuilt extends StatelessWidget {
   ///The app bar to be shown on the screen
   final Widget? appBar;
 
+  final Function(BuildContext)? onTapped;
+
   ///The key for the widget
   HMSPrebuilt(
       {super.key,
@@ -42,6 +44,7 @@ class HMSPrebuilt extends StatelessWidget {
       this.options,
       this.onLeave,
       this.appBar,
+      this.onTapped,
       this.authToken}) {
     if (roomCode == null && authToken == null) {
       throw ArgumentError.notNull(
@@ -69,6 +72,9 @@ class HMSPrebuilt extends StatelessWidget {
       options: options,
       onLeave: onLeave,
       appBar: appBar,
+      onTapped: (value){
+        onTapped!(value);
+      },
     );
   }
 }

@@ -14,10 +14,12 @@ class HMSLeftRoomScreen extends StatelessWidget {
   final bool isEndRoomCalled;
   final bool doesRoleHasStreamPermission;
   final Widget? appBar;
+  final Function(BuildContext)? onTapped;
   const HMSLeftRoomScreen(
       {super.key,
       this.isEndRoomCalled = false,
       this.appBar,
+      this.onTapped,
       this.doesRoleHasStreamPermission = false});
 
   @override
@@ -133,6 +135,9 @@ class HMSLeftRoomScreen extends StatelessWidget {
                                           options: Constant.prebuiltOptions,
                                           onLeave: Constant.onLeave,
                                           appBar: appBar,
+                                          onTapped: (value) {
+                                            onTapped!(value);
+                                          },
                                         ))),
                           },
                       child: SizedBox(
