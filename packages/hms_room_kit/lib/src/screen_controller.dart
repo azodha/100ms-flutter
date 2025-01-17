@@ -38,6 +38,8 @@ class ScreenController extends StatefulWidget {
 
   final Function(BuildContext)? onTapped;
 
+  final Function(String roomId)? onRoomIdAvailable;
+
   const ScreenController(
       {super.key,
       required this.roomCode,
@@ -45,6 +47,7 @@ class ScreenController extends StatefulWidget {
       this.onLeave,
       this.appBar,
       this.onTapped,
+      this.onRoomIdAvailable,
       this.authToken});
   @override
   State<ScreenController> createState() => _ScreenControllerState();
@@ -212,6 +215,9 @@ class _ScreenControllerState extends State<ScreenController> {
                   appBar: widget.appBar,
                   onTapped: (value) {
                     widget.onTapped!(value);
+                  },
+                  onRoomIdAvailable: (roomId) {
+                    widget.onRoomIdAvailable!(roomId);
                   },
                 )
               : PreviewPermissions(

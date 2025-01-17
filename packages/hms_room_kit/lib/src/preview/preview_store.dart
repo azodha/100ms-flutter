@@ -14,7 +14,7 @@ class PreviewStore extends ChangeNotifier
     implements HMSPreviewListener, HMSLogListener {
   late HMSSDKInteractor hmsSDKInteractor;
 
-  PreviewStore({required this.hmsSDKInteractor});
+  PreviewStore({required this.hmsSDKInteractor, this.onRoomIdAvailable,});
 
   List<HMSVideoTrack> localTracks = [];
 
@@ -55,6 +55,8 @@ class PreviewStore extends ChangeNotifier
 
   bool isNoiseCancellationEnabled = false;
 
+  final Function(String roomId)? onRoomIdAvailable;
+
   @override
   void onHMSError({required HMSException error}) {
     this.error = error;
@@ -64,6 +66,7 @@ class PreviewStore extends ChangeNotifier
   @override
   void onPreview({required HMSRoom room, required List<HMSTrack> localTracks}) {
     log("onPreview-> room: ${room.toString()}");
+    onRoomIdAvailable?.call(room.id);
     this.room = room;
     checkNoiseCancellationAvailablility();
     for (HMSPeer each in room.peers!) {
