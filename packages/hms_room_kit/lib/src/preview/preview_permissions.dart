@@ -96,7 +96,7 @@ class _PreviewPermissionsState extends State<PreviewPermissions> {
                   padding: const EdgeInsets.fromLTRB(8, 8, 8, 24),
                   child: SizedBox(
                     width: size.width - 40,
-                    height: 48,
+                    height: 54,
                     child: ElevatedButton(
                       onPressed: () {
                         _getPermissions();
