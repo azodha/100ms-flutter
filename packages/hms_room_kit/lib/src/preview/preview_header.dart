@@ -30,18 +30,6 @@ class PreviewHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: width,
-      decoration: BoxDecoration(
-          gradient: previewStore.isVideoOn
-              ? LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  stops: const [0.45, 1],
-                  colors: [
-                    HMSThemeColors.backgroundDim.withOpacity(1),
-                    HMSThemeColors.backgroundDim.withOpacity(0)
-                  ],
-                )
-              : null),
       child: Padding(
         padding: EdgeInsets.only(
           top: (!(previewStore.peer?.role.publishSettings!.allowed

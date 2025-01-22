@@ -122,17 +122,20 @@ class _OneToOneModeState extends State<OneToOneMode> {
                               ? InsetCollapsedView(
                                   callbackFunction: toggleMinimizedView,
                                 )
-                              : ClipRRect(
-                                  borderRadius: BorderRadius.circular(16.0),
-                                  child: ChangeNotifierProvider.value(
-                                    key: ValueKey(
-                                        oneToOnePeer?.uid ?? "" "video_view"),
-                                    value: oneToOnePeer,
-                                    child: InsetTile(
-                                      callbackFunction: toggleMinimizedView,
+                              : Padding(
+                                padding:  EdgeInsets.only(right: MediaQuery.sizeOf(context).width < 450 ? 0 : 100),
+                                child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(16.0),
+                                    child: ChangeNotifierProvider.value(
+                                      key: ValueKey(
+                                          oneToOnePeer?.uid ?? "" "video_view"),
+                                      value: oneToOnePeer,
+                                      child: InsetTile(
+                                        callbackFunction: toggleMinimizedView,
+                                      ),
                                     ),
                                   ),
-                                ))
+                              ))
                     ],
                   ),
       ),
