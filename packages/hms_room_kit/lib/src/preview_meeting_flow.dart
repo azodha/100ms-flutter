@@ -20,7 +20,19 @@ class PreviewMeetingFlow extends StatefulWidget {
   final Widget? appBar;
   final Function(BuildContext)? onTapped;
   final Function(String roomId)? onRoomIdAvailable;
-  const PreviewMeetingFlow({super.key, required this.prebuiltOptions, required this.hmsSDKInteractor, this.appBar, this.onTapped, required this.tokenData, required this.onRoomIdAvailable,});
+  final double? width;
+  final double? height;
+  const PreviewMeetingFlow({
+    super.key,
+    required this.prebuiltOptions,
+    required this.hmsSDKInteractor,
+    this.appBar,
+    this.onTapped,
+    required this.tokenData,
+    required this.onRoomIdAvailable,
+    this.width,
+    this.height,
+  });
 
   @override
   State<PreviewMeetingFlow> createState() => _PreviewMeetingFlowState();
@@ -33,9 +45,11 @@ class _PreviewMeetingFlowState extends State<PreviewMeetingFlow> {
   void initState() {
     super.initState();
     if (!HMSRoomLayout.skipPreview) {
-      store = PreviewStore(hmsSDKInteractor: widget.hmsSDKInteractor, onRoomIdAvailable: (roomId) {
-        widget.onRoomIdAvailable!(roomId);
-      });
+      store = PreviewStore(
+          hmsSDKInteractor: widget.hmsSDKInteractor,
+          onRoomIdAvailable: (roomId) {
+            widget.onRoomIdAvailable!(roomId);
+          });
     }
   }
 
@@ -63,6 +77,8 @@ class _PreviewMeetingFlowState extends State<PreviewMeetingFlow> {
               onTapped: (value) {
                 widget.onTapped!(value);
               },
+              width: widget.width,
+              height: widget.height,
             ));
   }
 }

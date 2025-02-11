@@ -22,13 +22,7 @@ class OneToOneMode extends StatefulWidget {
   final BuildContext context;
   final int screenShareCount;
   final double bottomMargin;
-  const OneToOneMode(
-      {Key? key,
-      required this.peerTracks,
-      required this.context,
-      required this.screenShareCount,
-      this.bottomMargin = 272})
-      : super(key: key);
+  const OneToOneMode({Key? key, required this.peerTracks, required this.context, required this.screenShareCount, this.bottomMargin = 272}) : super(key: key);
 
   @override
   State<OneToOneMode> createState() => _OneToOneModeState();
@@ -43,8 +37,7 @@ class _OneToOneModeState extends State<OneToOneMode> {
   void initState() {
     super.initState();
     if (widget.peerTracks.isNotEmpty) {
-      int index =
-          widget.peerTracks.indexWhere((element) => element.peer.isLocal);
+      int index = widget.peerTracks.indexWhere((element) => element.peer.isLocal);
       if (index != -1) {
         oneToOnePeer = widget.peerTracks[index];
         oneToOnePeer?.setOffScreenStatus(false);
@@ -62,8 +55,7 @@ class _OneToOneModeState extends State<OneToOneMode> {
   void didUpdateWidget(covariant OneToOneMode oldWidget) {
     ///This is used to find the local peer for inset tile
     if (widget.peerTracks.isNotEmpty) {
-      int index =
-          widget.peerTracks.indexWhere((element) => element.peer.isLocal);
+      int index = widget.peerTracks.indexWhere((element) => element.peer.isLocal);
       if (index != -1) {
         oneToOnePeer = widget.peerTracks[index];
         oneToOnePeer?.setOffScreenStatus(false);
@@ -103,10 +95,7 @@ class _OneToOneModeState extends State<OneToOneMode> {
                       ///we show the empty room screen
                       ///This is the case when the local peer is the only peer in the room
                       ///else we show the normal grid view
-                      (widget.peerTracks.length == 1 &&
-                              oneToOnePeer != null &&
-                              HMSRoomLayout.peerType ==
-                                  PeerRoleType.conferencing)
+                      (widget.peerTracks.length == 1 && oneToOnePeer != null && HMSRoomLayout.peerType == PeerRoleType.conferencing)
                           ? Center(child: EmptyRoomScreen())
                           : CustomOneToOneGrid(
                               peerTracks: widget.peerTracks,
@@ -114,28 +103,25 @@ class _OneToOneModeState extends State<OneToOneMode> {
                       DraggableWidget(
                           dragAnimationScale: 1,
                           topMargin: 10,
-                          bottomMargin: Platform.isIOS
-                              ? widget.bottomMargin + 20
-                              : widget.bottomMargin,
+                          bottomMargin: Platform.isIOS ? widget.bottomMargin + 20 : widget.bottomMargin,
                           horizontalSpace: 8,
                           child: isMinimized
                               ? InsetCollapsedView(
                                   callbackFunction: toggleMinimizedView,
                                 )
                               : Padding(
-                                padding:  EdgeInsets.only(right: MediaQuery.sizeOf(context).width < 450 ? 0 : 100),
-                                child: ClipRRect(
+                                  padding: EdgeInsets.only(right: MediaQuery.sizeOf(context).width < 450 ? 0 : 120 + MediaQuery.of(context).viewInsets.bottom, bottom: MediaQuery.sizeOf(context).width < 450 ? 80 + MediaQuery.of(context).viewInsets.bottom : 0),
+                                  child: ClipRRect(
                                     borderRadius: BorderRadius.circular(16.0),
                                     child: ChangeNotifierProvider.value(
-                                      key: ValueKey(
-                                          oneToOnePeer?.uid ?? "" "video_view"),
+                                      key: ValueKey(oneToOnePeer?.uid ?? "" "video_view"),
                                       value: oneToOnePeer,
                                       child: InsetTile(
                                         callbackFunction: toggleMinimizedView,
                                       ),
                                     ),
                                   ),
-                              ))
+                                ))
                     ],
                   ),
       ),
