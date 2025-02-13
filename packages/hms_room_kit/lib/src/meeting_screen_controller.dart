@@ -61,7 +61,14 @@ class MeetingScreenController extends StatefulWidget {
   ///[appBar] are the appBar to be shown on the screen
   final Widget? appBar;
 
+  ///[onTapped] is the callback for the tapped event
   final Function(BuildContext)? onTapped;
+
+  ///[screenWidth] is the width of the screen
+  final double? screenWidth;
+
+  ///[screenHeight] is the height of the screen
+  final double? screenHeight;
 
   const MeetingScreenController(
       {Key? key,
@@ -78,7 +85,9 @@ class MeetingScreenController extends StatefulWidget {
       required this.hmsSDKInteractor,
       this.appBar,
       this.onTapped,
-      this.isNoiseCancellationEnabled = false})
+      this.isNoiseCancellationEnabled = false,
+      this.screenWidth,
+      this.screenHeight})
       : super(key: key);
 
   @override
@@ -165,6 +174,8 @@ class _MeetingScreenControllerState extends State<MeetingScreenController> {
                           onTapped: (value) {
                             widget.onTapped!(value);
                           },
+                          screenWidth: widget.screenWidth,
+                          screenHeight: widget.screenHeight,
                         );
                 }),
           );

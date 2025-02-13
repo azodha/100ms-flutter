@@ -24,7 +24,8 @@ import 'package:hms_room_kit/src/widgets/common_widgets/hms_embedded_button.dart
 ///The mic and camera buttons are only rendered if the local peer has the
 ///permission to publish audio and video respectively
 class MeetingBottomNavigationBar extends StatefulWidget {
-  const MeetingBottomNavigationBar({super.key});
+  final bool? isTablet;
+  const MeetingBottomNavigationBar({super.key, this.isTablet});
 
   @override
   State<MeetingBottomNavigationBar> createState() =>
@@ -74,7 +75,7 @@ class _MeetingBottomNavigationBarState
                           ///Leave Button
                           HMSEmbeddedButton(
                             onTap: () async => {
-                              await UtilityComponents.onBackPressed(context)
+                              await UtilityComponents.onBackPressed(context, widget.isTablet ?? false)
                             },
                             offColor: HMSThemeColors.alertErrorDefault,
                             disabledBorderColor:

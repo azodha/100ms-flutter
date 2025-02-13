@@ -49,7 +49,7 @@ class HLSViewerHeader extends StatelessWidget {
                                 size: 24,
                               ),
                               onPressed: () {
-                                UtilityComponents.onBackPressed(context);
+                                UtilityComponents.onBackPressed(context, false);
                               },
                             )
                           ],

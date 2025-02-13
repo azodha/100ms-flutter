@@ -92,6 +92,8 @@ class _PreviewPageState extends State<PreviewPage> {
               onTapped: (value) {
                 widget.onTapped!(value);
               },
+              screenWidth: widget.width,
+              screenHeight: widget.height,
             )));
   }
 

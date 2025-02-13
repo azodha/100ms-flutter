@@ -66,6 +66,8 @@ class _PreviewMeetingFlowState extends State<PreviewMeetingFlow> {
             onTapped: (value) {
               widget.onTapped!(value);
             },
+            screenWidth: widget.width,
+            screenHeight: widget.height,
           )
         : ListenableProvider.value(
             value: store,
