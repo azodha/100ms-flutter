@@ -22,13 +22,9 @@ class OneToOneMode extends StatefulWidget {
   final BuildContext context;
   final int screenShareCount;
   final double bottomMargin;
-  const OneToOneMode(
-      {Key? key,
-      required this.peerTracks,
-      required this.context,
-      required this.screenShareCount,
-      this.bottomMargin = 272})
-      : super(key: key);
+  final double? screenWidth;
+  final double? screenHeight;
+  const OneToOneMode({Key? key, required this.peerTracks, required this.context, required this.screenShareCount, this.bottomMargin = 272, this.screenWidth, this.screenHeight}) : super(key: key);
 
   @override
   State<OneToOneMode> createState() => _OneToOneModeState();
@@ -43,8 +39,7 @@ class _OneToOneModeState extends State<OneToOneMode> {
   void initState() {
     super.initState();
     if (widget.peerTracks.isNotEmpty) {
-      int index =
-          widget.peerTracks.indexWhere((element) => element.peer.isLocal);
+      int index = widget.peerTracks.indexWhere((element) => element.peer.isLocal);
       if (index != -1) {
         oneToOnePeer = widget.peerTracks[index];
         oneToOnePeer?.setOffScreenStatus(false);
@@ -62,8 +57,7 @@ class _OneToOneModeState extends State<OneToOneMode> {
   void didUpdateWidget(covariant OneToOneMode oldWidget) {
     ///This is used to find the local peer for inset tile
     if (widget.peerTracks.isNotEmpty) {
-      int index =
-          widget.peerTracks.indexWhere((element) => element.peer.isLocal);
+      int index = widget.peerTracks.indexWhere((element) => element.peer.isLocal);
       if (index != -1) {
         oneToOnePeer = widget.peerTracks[index];
         oneToOnePeer?.setOffScreenStatus(false);
@@ -98,46 +92,47 @@ class _OneToOneModeState extends State<OneToOneMode> {
                 ///This handles when the local peer is also present as well as the other peers are also there.
                 ///i.e. this handles the normal flow
                 : Stack(
-                    children: [
-                      ///If there is only one peer in the room and the peer is local peer
-                      ///we show the empty room screen
-                      ///This is the case when the local peer is the only peer in the room
-                      ///else we show the normal grid view
-                      (widget.peerTracks.length == 1 &&
-                              oneToOnePeer != null &&
-                              HMSRoomLayout.peerType ==
-                                  PeerRoleType.conferencing)
-                          ? Center(child: EmptyRoomScreen())
-                          : CustomOneToOneGrid(
-                              peerTracks: widget.peerTracks,
-                            ),
-                      DraggableWidget(
-                          dragAnimationScale: 1,
-                          topMargin: 10,
-                          bottomMargin: Platform.isIOS
-                              ? widget.bottomMargin + 20
-                              : widget.bottomMargin,
-                          horizontalSpace: 8,
-                          child: isMinimized
-                              ? InsetCollapsedView(
-                                  callbackFunction: toggleMinimizedView,
-                                )
-                              : Padding(
-                                padding:  EdgeInsets.only(right: MediaQuery.sizeOf(context).width < 450 ? 0 : 100),
-                                child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(16.0),
-                                    child: ChangeNotifierProvider.value(
-                                      key: ValueKey(
-                                          oneToOnePeer?.uid ?? "" "video_view"),
-                                      value: oneToOnePeer,
-                                      child: InsetTile(
-                                        callbackFunction: toggleMinimizedView,
-                                      ),
-                                    ),
+                  children: [
+                    ///If there is only one peer in the room and the peer is local peer
+                    ///we show the empty room screen
+                    ///This is the case when the local peer is the only peer in the room
+                    ///else we show the normal grid view
+                    (widget.peerTracks.length == 1 && oneToOnePeer != null && HMSRoomLayout.peerType == PeerRoleType.conferencing)
+                        ? Center(child: EmptyRoomScreen())
+                        : CustomOneToOneGrid(
+                            peerTracks: widget.peerTracks,
+                          ),
+                    DraggableWidget(
+                      normalShadow: BoxShadow(
+                        color: Colors.transparent,
+                      ),
+                      draggingShadow: BoxShadow(
+                        color: Colors.transparent,
+                      ),
+                      dragAnimationScale: 1,
+                      topMargin: 10,
+                      bottomMargin: Platform.isIOS ? widget.bottomMargin + 20 : widget.bottomMargin,
+                      horizontalSpace: 8,
+                      child: isMinimized
+                          ? InsetCollapsedView(
+                              callbackFunction: toggleMinimizedView,
+                            )
+                          : ClipRRect(
+                              borderRadius: BorderRadius.circular(8.0),
+                              child: ChangeNotifierProvider.value(
+                                key: ValueKey(oneToOnePeer?.uid ?? "" "video_view"),
+                                value: oneToOnePeer,
+                                child: Padding(
+                                  padding: EdgeInsets.only(right: (MediaQuery.sizeOf(context).width - (widget.screenWidth ?? MediaQuery.sizeOf(context).width)) + 10),
+                                  child: InsetTile(
+                                    callbackFunction: toggleMinimizedView,
                                   ),
-                              ))
-                    ],
-                  ),
+                                ),
+                              ),
+                            ),
+                    ),
+                  ],
+                ),
       ),
     );
   }

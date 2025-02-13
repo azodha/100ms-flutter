@@ -37,8 +37,10 @@ class MeetingPage extends StatefulWidget {
   final bool isNoiseCancellationEnabled;
   final Widget? appBar;
   final Function(BuildContext)? onTapped;
+  final double? screenWidth;
+  final double? screenHeight;
 
-  const MeetingPage({Key? key, this.isRoomMute = true, required this.currentAudioDeviceMode, this.appBar, this.onTapped, this.isNoiseCancellationEnabled = false}) : super(key: key);
+  const MeetingPage({Key? key, this.isRoomMute = true, required this.currentAudioDeviceMode, this.appBar, this.onTapped, this.isNoiseCancellationEnabled = false, this.screenWidth, this.screenHeight}) : super(key: key);
 
   @override
   State<MeetingPage> createState() => _MeetingPageState();
@@ -78,7 +80,7 @@ class _MeetingPageState extends State<MeetingPage> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
-        bool ans = await UtilityComponents.onBackPressed(context) ?? false;
+        bool ans = await UtilityComponents.onBackPressed(context, (widget.screenWidth ?? MediaQuery.sizeOf(context).width) >= 450) ?? false;
         return ans;
       },
       child: SafeArea(
@@ -118,12 +120,12 @@ class _MeetingPageState extends State<MeetingPage> {
                                           height: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top - MediaQuery.of(context).padding.bottom,
                                           child: Stack(
                                             children: [
-                                              ChangeNotifierProvider.value(value: _visibilityController, child: MeetingGridComponent(visibilityController: _visibilityController)),
+                                              ChangeNotifierProvider.value(value: _visibilityController, child: MeetingGridComponent(visibilityController: _visibilityController, screenWidth: widget.screenWidth, screenHeight: widget.screenHeight)),
                                               Column(
                                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                 children: [
                                                   Padding(padding: const EdgeInsets.only(left: 15, right: 15, top: 5, bottom: 2), child: ChangeNotifierProvider.value(value: _visibilityController, child: const MeetingHeader())),
-                                                  Padding(padding: const EdgeInsets.only(bottom: 8.0), child: ChangeNotifierProvider.value(value: _visibilityController, child: const MeetingBottomNavigationBar())),
+                                                  Padding(padding: const EdgeInsets.only(bottom: 8.0), child: ChangeNotifierProvider.value(value: _visibilityController, child: MeetingBottomNavigationBar(isTablet: (widget.screenWidth ?? MediaQuery.sizeOf(context).width) >= 450))),
                                                 ],
                                               ),
 

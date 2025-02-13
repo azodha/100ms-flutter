@@ -21,8 +21,10 @@ import 'package:hms_room_kit/src/widgets/meeting_modes/one_to_one_mode.dart';
 ///[MeetingGridComponent] is a component that is used to show the video grid
 class MeetingGridComponent extends StatelessWidget {
   final MeetingNavigationVisibilityController? visibilityController;
+  final double? screenWidth;
+  final double? screenHeight;
 
-  const MeetingGridComponent({super.key, required this.visibilityController});
+  const MeetingGridComponent({super.key, required this.visibilityController, this.screenWidth, this.screenHeight});
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +67,7 @@ class MeetingGridComponent extends StatelessWidget {
                           ///
                           ///Here we also check for the platform and reduce the height accordingly
                           height: showControls
-                              ? MediaQuery.of(context).size.height -
+                              ? (screenHeight ?? MediaQuery.of(context).size.height) -
                                   MediaQuery.of(context).padding.top -
                                   MediaQuery.of(context).padding.bottom -
                                   (Platform.isAndroid
@@ -73,10 +75,11 @@ class MeetingGridComponent extends StatelessWidget {
                                       : Platform.isIOS
                                           ? 230
                                           : 160)
-                              : MediaQuery.of(context).size.height -
+                                : (screenHeight ?? MediaQuery.of(context).size.height) -
                                   MediaQuery.of(context).padding.top -
                                   MediaQuery.of(context).padding.bottom -
                                   20,
+                          width: screenWidth ?? MediaQuery.of(context).size.width,
                           child: GestureDetector(
                             onTap: () => visibilityController
                                 ?.toggleControlsVisibility(),
@@ -99,6 +102,8 @@ class MeetingGridComponent extends StatelessWidget {
                                     peerTracks: data.item1,
                                     screenShareCount: data.item4,
                                     context: context,
+                                    screenWidth: screenWidth,
+                                    screenHeight: screenHeight,
                                   )
                                 : CustomOneToOneGrid(
                                     isLocalInsetPresent: false,

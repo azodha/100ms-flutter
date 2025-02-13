@@ -22,13 +22,17 @@ import 'package:hms_room_kit/src/widgets/hms_buttons/hms_back_button.dart';
 import 'package:hms_room_kit/src/preview/preview_store.dart';
 import 'package:hms_room_kit/src/widgets/common_widgets/hms_listenable_button.dart';
 
-///This renders the Preview Screen
+/// [PreviewPage] renders the Preview Screen
+/// If [width] and [height] are provided, the preview will be constrained to those dimensions.
+/// Otherwise, it will use the full screen dimensions.
 class PreviewPage extends StatefulWidget {
   final String name;
   final HMSPrebuiltOptions? options;
   final String tokenData;
   final Widget? appBar;
   final Function(BuildContext)? onTapped;
+  final double? width;
+  final double? height;
 
   const PreviewPage(
       {super.key,
@@ -36,7 +40,9 @@ class PreviewPage extends StatefulWidget {
       required this.options,
       this.appBar,
       this.onTapped,
-      required this.tokenData});
+      required this.tokenData,
+      this.width,
+      this.height});
   @override
   State<PreviewPage> createState() => _PreviewPageState();
 }
@@ -86,14 +92,16 @@ class _PreviewPageState extends State<PreviewPage> {
               onTapped: (value) {
                 widget.onTapped!(value);
               },
+              screenWidth: widget.width,
+              screenHeight: widget.height,
             )));
   }
 
   @override
   Widget build(BuildContext context) {
     var size = MediaQuery.of(context).size;
-    final double height = size.height;
-    final double width = size.width;
+    final double height = widget.height ?? size.height;
+    final double width = widget.width ?? size.width;
     final previewStore = context.watch<PreviewStore>();
 
     return WillPopScope(

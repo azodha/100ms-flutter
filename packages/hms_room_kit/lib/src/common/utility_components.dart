@@ -26,14 +26,16 @@ import 'package:hms_room_kit/src/widgets/common_widgets/hms_text_style.dart';
 
 ///[UtilityComponents] contains the common components used in the app
 class UtilityComponents {
-  static Future<dynamic> onBackPressed(BuildContext context) {
+  static Future<dynamic> onBackPressed(BuildContext context, bool? isTablet) {
     MeetingStore meetingStore = context.read<MeetingStore>();
     return showModalBottomSheet(
       isScrollControlled: true,
       backgroundColor: HMSThemeColors.surfaceDim,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(16), topRight: Radius.circular(16)),
+        borderRadius: BorderRadius.only(topLeft: Radius.circular(16), topRight: Radius.circular(16)),
+      ),
+      constraints: BoxConstraints(
+        maxHeight: isTablet ?? false ? MediaQuery.of(context).size.height * 0.6 : MediaQuery.of(context).size.height * 0.9, // Optional max height constraint
       ),
       context: context,
       builder: (ctx) => ChangeNotifierProvider.value(
@@ -172,24 +174,12 @@ class UtilityComponents {
               ),
               Text(
                 'Leave Studio',
-                style: HMSTextStyle.setTextStyle(
-                    color: themeDefaultColor,
-                    fontSize: 20,
-                    height: 24 / 20,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.15),
+                style: HMSTextStyle.setTextStyle(color: themeDefaultColor, fontSize: 20, height: 24 / 20, fontWeight: FontWeight.w600, letterSpacing: 0.15),
               ),
             ],
           ),
         ),
-        content: Text(
-            "Others will continue after you leave. You can join the studio again.",
-            style: HMSTextStyle.setTextStyle(
-                color: themeHintColor,
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
-                height: 20 / 14,
-                letterSpacing: 0.25)),
+        content: Text("Others will continue after you leave. You can join the studio again.", style: HMSTextStyle.setTextStyle(color: themeHintColor, fontSize: 14, fontWeight: FontWeight.w400, height: 20 / 14, letterSpacing: 0.25)),
         actions: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -197,23 +187,16 @@ class UtilityComponents {
               Expanded(
                 child: ElevatedButton(
                     style: ButtonStyle(
-                        shadowColor:
-                            MaterialStateProperty.all(themeSurfaceColor),
-                        backgroundColor:
-                            MaterialStateProperty.all(themeBottomSheetColor),
-                        shape:
-                            MaterialStateProperty.all<RoundedRectangleBorder>(
-                                RoundedRectangleBorder(
-                          side: BorderSide(
-                              width: 1, color: popupButtonBorderColor),
+                        shadowColor: MaterialStateProperty.all(themeSurfaceColor),
+                        backgroundColor: MaterialStateProperty.all(themeBottomSheetColor),
+                        shape: MaterialStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(
+                          side: BorderSide(width: 1, color: popupButtonBorderColor),
                           borderRadius: BorderRadius.circular(8.0),
                         ))),
                     onPressed: () => Navigator.pop(context, false),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8.0, vertical: 12),
-                      child: HMSTitleText(
-                          text: 'Don’t Leave', textColor: themeDefaultColor),
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 12),
+                      child: HMSTitleText(text: 'Don’t Leave', textColor: themeDefaultColor),
                     )),
               ),
               const SizedBox(
@@ -224,18 +207,13 @@ class UtilityComponents {
                   style: ButtonStyle(
                       shadowColor: MaterialStateProperty.all(themeSurfaceColor),
                       backgroundColor: MaterialStateProperty.all(errorColor),
-                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                          RoundedRectangleBorder(
+                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(
                         side: BorderSide(width: 1, color: errorColor),
                         borderRadius: BorderRadius.circular(8.0),
                       ))),
-                  onPressed: () => {
-                    meetingStore.leave(),
-                    Navigator.popUntil(context, (route) => route.isFirst)
-                  },
+                  onPressed: () => {meetingStore.leave(), Navigator.popUntil(context, (route) => route.isFirst)},
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 25.0, vertical: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 12),
                     child: HMSTitleText(
                       text: 'Leave',
                       textColor: hmsWhiteColor,
@@ -250,18 +228,11 @@ class UtilityComponents {
     );
   }
 
-  static void showRoleChangeDialog(
-      HMSRoleChangeRequest event, BuildContext context) async {
-    await showDialog(
-        barrierDismissible: false,
-        context: context,
-        builder: (ctx) => RoleChangeRequestDialog(
-            roleChangeRequest: event,
-            meetingStore: context.read<MeetingStore>()));
+  static void showRoleChangeDialog(HMSRoleChangeRequest event, BuildContext context) async {
+    await showDialog(barrierDismissible: false, context: context, builder: (ctx) => RoleChangeRequestDialog(roleChangeRequest: event, meetingStore: context.read<MeetingStore>()));
   }
 
-  static showTrackChangeDialog(
-      BuildContext context, HMSTrackChangeRequest trackChangeRequest) async {
+  static showTrackChangeDialog(BuildContext context, HMSTrackChangeRequest trackChangeRequest) async {
     MeetingStore meetingStore = context.read<MeetingStore>();
     await showDialog(
         barrierDismissible: false,
@@ -275,14 +246,12 @@ class UtilityComponents {
 
   static showonExceptionDialog(event, BuildContext context) {
     event = event as HMSException;
-    var message =
-        "${event.message} ${event.id ?? ""} ${event.code?.errorCode ?? ""} ${event.description} ${event.action} ${event.params ?? "".toString()}";
+    var message = "${event.message} ${event.id ?? ""} ${event.code?.errorCode ?? ""} ${event.description} ${event.action} ${event.params ?? "".toString()}";
     showDialog(
         context: context,
         builder: (context) {
           return AlertDialog(
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             backgroundColor: themeBottomSheetColor,
             content: Text(
               message,
@@ -305,8 +274,7 @@ class UtilityComponents {
         });
   }
 
-  static Future<String> showInputDialog(
-      {context, String placeholder = "", String prefilledValue = ""}) async {
+  static Future<String> showInputDialog({context, String placeholder = "", String prefilledValue = ""}) async {
     TextEditingController textController = TextEditingController();
     if (prefilledValue.isNotEmpty) {
       textController.text = prefilledValue;
@@ -314,8 +282,7 @@ class UtilityComponents {
     String answer = await showDialog(
         context: context,
         builder: (context) => AlertDialog(
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               backgroundColor: themeBottomSheetColor,
               content: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -368,8 +335,7 @@ class UtilityComponents {
         context: context,
         builder: (context) => StatefulBuilder(builder: (context, setState) {
               return AlertDialog(
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 backgroundColor: themeBottomSheetColor,
                 content: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -435,8 +401,7 @@ class UtilityComponents {
                     onPressed: () {
                       if (textController.text == "") {
                       } else {
-                        meetingStore.startHLSStreaming(
-                            isSingleFileChecked, isVODChecked);
+                        meetingStore.startHLSStreaming(isSingleFileChecked, isVODChecked);
                         Navigator.pop(context);
                       }
                     },
@@ -446,16 +411,14 @@ class UtilityComponents {
             }));
   }
 
-  static showRoleListForMute(BuildContext context, List<HMSRole> roles,
-      MeetingStore meetingStore) async {
+  static showRoleListForMute(BuildContext context, List<HMSRole> roles, MeetingStore meetingStore) async {
     List<HMSRole> selectedRoles = [];
     bool muteAll = false;
     showDialog(
         context: context,
         builder: (context) => StatefulBuilder(builder: (context, setState) {
               return AlertDialog(
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 backgroundColor: themeBottomSheetColor,
                 title: Text(
                   "Select Role for Mute",
@@ -474,8 +437,7 @@ class UtilityComponents {
                               itemCount: roles.length,
                               itemBuilder: (context, index) {
                                 return Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text(
                                       roles[index].name,
@@ -484,14 +446,12 @@ class UtilityComponents {
                                       ),
                                     ),
                                     Checkbox(
-                                        value: selectedRoles
-                                            .contains(roles[index]),
+                                        value: selectedRoles.contains(roles[index]),
                                         activeColor: Colors.blue,
                                         onChanged: (bool? value) {
                                           if (value != null && value) {
                                             selectedRoles.add(roles[index]);
-                                          } else if (selectedRoles
-                                              .contains(roles[index])) {
+                                          } else if (selectedRoles.contains(roles[index])) {
                                             selectedRoles.remove(roles[index]);
                                           }
                                           setState(() {});
@@ -504,8 +464,7 @@ class UtilityComponents {
                             children: [
                               Text(
                                 "Mute All",
-                                style: HMSTextStyle.setTextStyle(
-                                    color: Colors.red),
+                                style: HMSTextStyle.setTextStyle(color: Colors.red),
                               ),
                               Checkbox(
                                   value: muteAll,
@@ -523,17 +482,11 @@ class UtilityComponents {
                             children: [
                               ElevatedButton(
                                   style: ButtonStyle(
-                                      shadowColor: MaterialStateProperty.all(
-                                          themeSurfaceColor),
-                                      backgroundColor:
-                                          MaterialStateProperty.all(errorColor),
-                                      shape: MaterialStateProperty.all<
-                                              RoundedRectangleBorder>(
-                                          RoundedRectangleBorder(
-                                        side: BorderSide(
-                                            width: 1, color: errorColor),
-                                        borderRadius:
-                                            BorderRadius.circular(8.0),
+                                      shadowColor: MaterialStateProperty.all(themeSurfaceColor),
+                                      backgroundColor: MaterialStateProperty.all(errorColor),
+                                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(
+                                        side: BorderSide(width: 1, color: errorColor),
+                                        borderRadius: BorderRadius.circular(8.0),
                                       ))),
                                   onPressed: () {
                                     Navigator.pop(context);
@@ -544,26 +497,17 @@ class UtilityComponents {
                                   )),
                               ElevatedButton(
                                   style: ButtonStyle(
-                                      shadowColor: MaterialStateProperty.all(
-                                          themeSurfaceColor),
-                                      backgroundColor:
-                                          MaterialStateProperty.all(
-                                              hmsdefaultColor),
-                                      shape: MaterialStateProperty.all<
-                                              RoundedRectangleBorder>(
-                                          RoundedRectangleBorder(
-                                        side: BorderSide(
-                                            width: 1, color: hmsdefaultColor),
-                                        borderRadius:
-                                            BorderRadius.circular(8.0),
+                                      shadowColor: MaterialStateProperty.all(themeSurfaceColor),
+                                      backgroundColor: MaterialStateProperty.all(hmsdefaultColor),
+                                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(
+                                        side: BorderSide(width: 1, color: hmsdefaultColor),
+                                        borderRadius: BorderRadius.circular(8.0),
                                       ))),
                                   onPressed: () {
                                     if (muteAll) {
-                                      meetingStore.changeTrackStateForRole(
-                                          true, null);
+                                      meetingStore.changeTrackStateForRole(true, null);
                                     } else if (selectedRoles.isNotEmpty) {
-                                      meetingStore.changeTrackStateForRole(
-                                          true, selectedRoles);
+                                      meetingStore.changeTrackStateForRole(true, selectedRoles);
                                     }
                                     Navigator.pop(context);
                                   },
@@ -580,8 +524,7 @@ class UtilityComponents {
             }));
   }
 
-  static showDialogForBulkRoleChange(BuildContext context, List<HMSRole> roles,
-      MeetingStore meetingStore) async {
+  static showDialogForBulkRoleChange(BuildContext context, List<HMSRole> roles, MeetingStore meetingStore) async {
     List<HMSRole> selectedRoles = [];
     HMSRole toRole = roles[0];
 
@@ -593,8 +536,7 @@ class UtilityComponents {
         context: context,
         builder: (context) => StatefulBuilder(builder: (context, setState) {
               return AlertDialog(
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 backgroundColor: themeBottomSheetColor,
                 title: Text(
                   "Select roles for change role",
@@ -613,8 +555,7 @@ class UtilityComponents {
                               itemCount: roles.length,
                               itemBuilder: (context, index) {
                                 return Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text(
                                       roles[index].name,
@@ -623,14 +564,12 @@ class UtilityComponents {
                                       ),
                                     ),
                                     Checkbox(
-                                        value: selectedRoles
-                                            .contains(roles[index]),
+                                        value: selectedRoles.contains(roles[index]),
                                         activeColor: hmsdefaultColor,
                                         onChanged: (bool? value) {
                                           if (value != null && value) {
                                             selectedRoles.add(roles[index]);
-                                          } else if (selectedRoles
-                                              .contains(roles[index])) {
+                                          } else if (selectedRoles.contains(roles[index])) {
                                             selectedRoles.remove(roles[index]);
                                           }
                                           setState(() {});
@@ -652,16 +591,12 @@ class UtilityComponents {
                             decoration: BoxDecoration(
                               color: themeSurfaceColor,
                               borderRadius: BorderRadius.circular(10.0),
-                              border: Border.all(
-                                  color: borderColor,
-                                  style: BorderStyle.solid,
-                                  width: 0.80),
+                              border: Border.all(color: borderColor, style: BorderStyle.solid, width: 0.80),
                             ),
                             child: DropdownButtonHideUnderline(
                                 child: HMSDropDown(
                                     dropDownItems: roles
-                                        .sortedBy((element) =>
-                                            element.priority.toString())
+                                        .sortedBy((element) => element.priority.toString())
                                         .map((role) => DropdownMenuItem(
                                               value: role,
                                               child: HMSTitleText(
@@ -672,8 +607,7 @@ class UtilityComponents {
                                             ))
                                         .toList(),
                                     iconStyleData: IconStyleData(
-                                      icon:
-                                          const Icon(Icons.keyboard_arrow_down),
+                                      icon: const Icon(Icons.keyboard_arrow_down),
                                       iconEnabledColor: themeDefaultColor,
                                     ),
                                     selectedValue: toRole,
@@ -687,55 +621,38 @@ class UtilityComponents {
                             children: [
                               ElevatedButton(
                                   style: ButtonStyle(
-                                      shadowColor: MaterialStateProperty.all(
-                                          themeSurfaceColor),
-                                      backgroundColor:
-                                          MaterialStateProperty.all(errorColor),
-                                      shape: MaterialStateProperty.all<
-                                              RoundedRectangleBorder>(
-                                          RoundedRectangleBorder(
-                                        side: BorderSide(
-                                            width: 1, color: errorColor),
-                                        borderRadius:
-                                            BorderRadius.circular(8.0),
+                                      shadowColor: MaterialStateProperty.all(themeSurfaceColor),
+                                      backgroundColor: MaterialStateProperty.all(errorColor),
+                                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(
+                                        side: BorderSide(width: 1, color: errorColor),
+                                        borderRadius: BorderRadius.circular(8.0),
                                       ))),
                                   onPressed: () {
                                     Navigator.pop(context);
                                   },
                                   child: Text(
                                     "Cancel",
-                                    style: HMSTextStyle.setTextStyle(
-                                        fontWeight: FontWeight.w600),
+                                    style: HMSTextStyle.setTextStyle(fontWeight: FontWeight.w600),
                                   )),
                               ElevatedButton(
                                   style: ButtonStyle(
-                                      shadowColor: MaterialStateProperty.all(
-                                          themeSurfaceColor),
-                                      backgroundColor:
-                                          MaterialStateProperty.all(
-                                              hmsdefaultColor),
-                                      shape: MaterialStateProperty.all<
-                                              RoundedRectangleBorder>(
-                                          RoundedRectangleBorder(
-                                        side: BorderSide(
-                                            width: 1, color: hmsdefaultColor),
-                                        borderRadius:
-                                            BorderRadius.circular(8.0),
+                                      shadowColor: MaterialStateProperty.all(themeSurfaceColor),
+                                      backgroundColor: MaterialStateProperty.all(hmsdefaultColor),
+                                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(
+                                        side: BorderSide(width: 1, color: hmsdefaultColor),
+                                        borderRadius: BorderRadius.circular(8.0),
                                       ))),
                                   onPressed: () {
                                     if (selectedRoles.isEmpty) {
-                                      Utilities.showToast(
-                                          "Please select a role");
+                                      Utilities.showToast("Please select a role");
                                     } else {
-                                      meetingStore.changeRoleOfPeersWithRoles(
-                                          toRole, selectedRoles);
+                                      meetingStore.changeRoleOfPeersWithRoles(toRole, selectedRoles);
                                       Navigator.pop(context);
                                     }
                                   },
                                   child: Text(
                                     "Change Role",
-                                    style: HMSTextStyle.setTextStyle(
-                                        fontWeight: FontWeight.w600),
+                                    style: HMSTextStyle.setTextStyle(fontWeight: FontWeight.w600),
                                   ))
                             ],
                           )
@@ -746,11 +663,7 @@ class UtilityComponents {
             }));
   }
 
-  static Future<Map<String, dynamic>> showRTMPInputDialog(
-      {context,
-      String placeholder = "",
-      String prefilledValue = "",
-      bool isRecordingEnabled = false}) async {
+  static Future<Map<String, dynamic>> showRTMPInputDialog({context, String placeholder = "", String prefilledValue = "", bool isRecordingEnabled = false}) async {
     TextEditingController textController = TextEditingController();
     if (prefilledValue.isNotEmpty) {
       textController.text = prefilledValue;
@@ -759,11 +672,9 @@ class UtilityComponents {
         context: context,
         builder: (context) => StatefulBuilder(builder: (context, setState) {
               return AlertDialog(
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 backgroundColor: themeBottomSheetColor,
-                contentPadding: const EdgeInsets.only(
-                    left: 14, right: 10, top: 15, bottom: 15),
+                contentPadding: const EdgeInsets.only(left: 14, right: 10, top: 15, bottom: 15),
                 content: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -800,71 +711,42 @@ class UtilityComponents {
                     children: [
                       ElevatedButton(
                           style: ButtonStyle(
-                              shadowColor:
-                                  MaterialStateProperty.all(themeSurfaceColor),
-                              backgroundColor: MaterialStateProperty.all(
-                                  themeBottomSheetColor),
-                              shape: MaterialStateProperty.all<
-                                      RoundedRectangleBorder>(
-                                  RoundedRectangleBorder(
-                                side: const BorderSide(
-                                    width: 1,
-                                    color: Color.fromRGBO(107, 125, 153, 1)),
+                              shadowColor: MaterialStateProperty.all(themeSurfaceColor),
+                              backgroundColor: MaterialStateProperty.all(themeBottomSheetColor),
+                              shape: MaterialStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(
+                                side: const BorderSide(width: 1, color: Color.fromRGBO(107, 125, 153, 1)),
                                 borderRadius: BorderRadius.circular(8.0),
                               ))),
-                          onPressed: () => Navigator.pop(
-                              context, {"url": "", "toRecord": false}),
+                          onPressed: () => Navigator.pop(context, {"url": "", "toRecord": false}),
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 6, vertical: 12),
-                            child: Text('Cancel',
-                                style: HMSTextStyle.setTextStyle(
-                                    color: themeDefaultColor,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    letterSpacing: 0.50)),
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 12),
+                            child: Text('Cancel', style: HMSTextStyle.setTextStyle(color: themeDefaultColor, fontSize: 16, fontWeight: FontWeight.w600, letterSpacing: 0.50)),
                           )),
                       ElevatedButton(
                         style: ButtonStyle(
-                            shadowColor:
-                                MaterialStateProperty.all(themeSurfaceColor),
-                            backgroundColor:
-                                MaterialStateProperty.all(hmsdefaultColor),
-                            shape: MaterialStateProperty.all<
-                                RoundedRectangleBorder>(RoundedRectangleBorder(
-                              side:
-                                  BorderSide(width: 1, color: hmsdefaultColor),
+                            shadowColor: MaterialStateProperty.all(themeSurfaceColor),
+                            backgroundColor: MaterialStateProperty.all(hmsdefaultColor),
+                            shape: MaterialStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(
+                              side: BorderSide(width: 1, color: hmsdefaultColor),
                               borderRadius: BorderRadius.circular(8.0),
                             ))),
                         onPressed: () => {
                           if (textController.text != "")
                             {
-                              Navigator.pop(context, {
-                                "url": textController.text,
-                                "toRecord": isRecordingEnabled
-                              })
+                              Navigator.pop(context, {"url": textController.text, "toRecord": isRecordingEnabled})
                             }
                           else if (isRecordingEnabled)
                             {
-                              Navigator.pop(context,
-                                  {"url": "", "toRecord": isRecordingEnabled})
+                              Navigator.pop(context, {"url": "", "toRecord": isRecordingEnabled})
                             }
                           else
-                            {
-                              Utilities.showToast(
-                                  "Please enter RTMP URLs or enable recording")
-                            }
+                            {Utilities.showToast("Please enter RTMP URLs or enable recording")}
                         },
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 12),
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 12),
                           child: Text(
                             'Start RTMP',
-                            style: HMSTextStyle.setTextStyle(
-                                color: hmsWhiteColor,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 0.50),
+                            style: HMSTextStyle.setTextStyle(color: hmsWhiteColor, fontSize: 16, fontWeight: FontWeight.w600, letterSpacing: 0.50),
                           ),
                         ),
                       ),
@@ -900,24 +782,12 @@ class UtilityComponents {
               ),
               Text(
                 "End Room",
-                style: HMSTextStyle.setTextStyle(
-                    color: errorColor,
-                    fontSize: 20,
-                    height: 24 / 20,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.15),
+                style: HMSTextStyle.setTextStyle(color: errorColor, fontSize: 20, height: 24 / 20, fontWeight: FontWeight.w600, letterSpacing: 0.15),
               ),
             ],
           ),
         ),
-        content: Text(
-            "The session will end for everyone and all the activities will stop. You can’t undo this action.",
-            style: HMSTextStyle.setTextStyle(
-                color: dialogcontentColor,
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
-                height: 20 / 14,
-                letterSpacing: 0.25)),
+        content: Text("The session will end for everyone and all the activities will stop. You can’t undo this action.", style: HMSTextStyle.setTextStyle(color: dialogcontentColor, fontSize: 14, fontWeight: FontWeight.w400, height: 20 / 14, letterSpacing: 0.25)),
         actions: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -925,28 +795,18 @@ class UtilityComponents {
               Expanded(
                 child: ElevatedButton(
                     style: ButtonStyle(
-                        shadowColor:
-                            MaterialStateProperty.all(themeSurfaceColor),
+                        shadowColor: MaterialStateProperty.all(themeSurfaceColor),
                         backgroundColor: MaterialStateProperty.all(
                           const Color.fromRGBO(32, 22, 23, 1),
                         ),
-                        shape:
-                            MaterialStateProperty.all<RoundedRectangleBorder>(
-                                RoundedRectangleBorder(
-                          side: BorderSide(
-                              width: 1, color: popupButtonBorderColor),
+                        shape: MaterialStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(
+                          side: BorderSide(width: 1, color: popupButtonBorderColor),
                           borderRadius: BorderRadius.circular(8.0),
                         ))),
                     onPressed: () => Navigator.pop(context, false),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8.0, vertical: 12),
-                      child: Text("Don't End",
-                          style: HMSTextStyle.setTextStyle(
-                              color: themeDefaultColor,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 0.50)),
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 12),
+                      child: Text("Don't End", style: HMSTextStyle.setTextStyle(color: themeDefaultColor, fontSize: 16, fontWeight: FontWeight.w600, letterSpacing: 0.50)),
                     )),
               ),
               const SizedBox(
@@ -957,26 +817,19 @@ class UtilityComponents {
                   style: ButtonStyle(
                       shadowColor: MaterialStateProperty.all(themeSurfaceColor),
                       backgroundColor: MaterialStateProperty.all(errorColor),
-                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                          RoundedRectangleBorder(
+                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(
                         side: BorderSide(width: 1, color: errorColor),
                         borderRadius: BorderRadius.circular(8.0),
                       ))),
                   onPressed: () => {
                     meetingStore.endRoom(false, "Room Ended From Flutter"),
-                    if (meetingStore.isRoomEnded)
-                      {Navigator.popUntil(context, (route) => route.isFirst)}
+                    if (meetingStore.isRoomEnded) {Navigator.popUntil(context, (route) => route.isFirst)}
                   },
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8.0, vertical: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 12),
                     child: Text(
                       "End Room",
-                      style: HMSTextStyle.setTextStyle(
-                          color: hmsWhiteColor,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.50),
+                      style: HMSTextStyle.setTextStyle(color: hmsWhiteColor, fontSize: 16, fontWeight: FontWeight.w600, letterSpacing: 0.50),
                     ),
                   ),
                 ),
@@ -1000,11 +853,7 @@ class UtilityComponents {
       },
       child: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: SvgPicture.asset(
-            "packages/hms_room_kit/lib/src/assets/icons/rotate.svg",
-            colorFilter: ColorFilter.mode(
-                meetingStore.isScreenRotationAllowed ? Colors.blue : iconColor,
-                BlendMode.srcIn)),
+        child: SvgPicture.asset("packages/hms_room_kit/lib/src/assets/icons/rotate.svg", colorFilter: ColorFilter.mode(meetingStore.isScreenRotationAllowed ? Colors.blue : iconColor, BlendMode.srcIn)),
       ),
     );
   }
@@ -1073,32 +922,21 @@ class UtilityComponents {
   // }
 
   static Widget showReconnectingDialog(BuildContext context) {
-    return Container(
-        height: MediaQuery.of(context).size.height,
-        color: HMSThemeColors.backgroundDefault.withOpacity(0.5),
-        child: const HMSReconnectionToast());
+    return Container(height: MediaQuery.of(context).size.height, color: HMSThemeColors.backgroundDefault.withOpacity(0.5), child: const HMSReconnectionToast());
   }
 
   ///This returns the error toasts whenever the error is terminal
-  static Widget showFailureError(
-      HMSException exception, BuildContext context, Function onLeavePressed) {
+  static Widget showFailureError(HMSException exception, BuildContext context, Function onLeavePressed) {
     return Container(
         height: MediaQuery.of(context).size.height,
         color: HMSThemeColors.backgroundDefault.withOpacity(0.5),
         child: HMSDisconnectedToast(
-          errorDescription:
-              "CODE: ${exception.code?.errorCode}, ${exception.description}",
+          errorDescription: "CODE: ${exception.code?.errorCode}, ${exception.description}",
           onLeavePressed: onLeavePressed,
         ));
   }
 
-  static onEndStream(
-      {required BuildContext context,
-      required String title,
-      required String content,
-      required String actionText,
-      required String ignoreText,
-      bool leaveRoom = false}) {
+  static onEndStream({required BuildContext context, required String title, required String content, required String actionText, required String ignoreText, bool leaveRoom = false}) {
     MeetingStore meetingStore = context.read<MeetingStore>();
     return showDialog(
       context: context,
@@ -1121,23 +959,12 @@ class UtilityComponents {
               ),
               Text(
                 title,
-                style: HMSTextStyle.setTextStyle(
-                    color: errorColor,
-                    fontSize: 20,
-                    height: 24 / 20,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.15),
+                style: HMSTextStyle.setTextStyle(color: errorColor, fontSize: 20, height: 24 / 20, fontWeight: FontWeight.w600, letterSpacing: 0.15),
               ),
             ],
           ),
         ),
-        content: Text(content,
-            style: HMSTextStyle.setTextStyle(
-                color: dialogcontentColor,
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
-                height: 20 / 14,
-                letterSpacing: 0.25)),
+        content: Text(content, style: HMSTextStyle.setTextStyle(color: dialogcontentColor, fontSize: 14, fontWeight: FontWeight.w400, height: 20 / 14, letterSpacing: 0.25)),
         actions: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1145,28 +972,18 @@ class UtilityComponents {
               Expanded(
                 child: ElevatedButton(
                     style: ButtonStyle(
-                        shadowColor:
-                            MaterialStateProperty.all(themeSurfaceColor),
+                        shadowColor: MaterialStateProperty.all(themeSurfaceColor),
                         backgroundColor: MaterialStateProperty.all(
                           const Color.fromRGBO(32, 22, 23, 1),
                         ),
-                        shape:
-                            MaterialStateProperty.all<RoundedRectangleBorder>(
-                                RoundedRectangleBorder(
-                          side: BorderSide(
-                              width: 1, color: popupButtonBorderColor),
+                        shape: MaterialStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(
+                          side: BorderSide(width: 1, color: popupButtonBorderColor),
                           borderRadius: BorderRadius.circular(8.0),
                         ))),
                     onPressed: () => Navigator.pop(context),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8.0, vertical: 12),
-                      child: Text(ignoreText,
-                          style: HMSTextStyle.setTextStyle(
-                              color: hmsWhiteColor,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 0.50)),
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 12),
+                      child: Text(ignoreText, style: HMSTextStyle.setTextStyle(color: hmsWhiteColor, fontSize: 16, fontWeight: FontWeight.w600, letterSpacing: 0.50)),
                     )),
               ),
               const SizedBox(
@@ -1177,8 +994,7 @@ class UtilityComponents {
                   style: ButtonStyle(
                       shadowColor: MaterialStateProperty.all(themeSurfaceColor),
                       backgroundColor: MaterialStateProperty.all(errorColor),
-                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                          RoundedRectangleBorder(
+                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(
                         side: BorderSide(width: 1, color: errorColor),
                         borderRadius: BorderRadius.circular(8.0),
                       ))),
@@ -1191,15 +1007,10 @@ class UtilityComponents {
                     Navigator.pop(context)
                   },
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8.0, vertical: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 12),
                     child: Text(
                       actionText,
-                      style: HMSTextStyle.setTextStyle(
-                          color: themeDefaultColor,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.50),
+                      style: HMSTextStyle.setTextStyle(color: themeDefaultColor, fontSize: 16, fontWeight: FontWeight.w600, letterSpacing: 0.50),
                     ),
                   ),
                 ),
@@ -1211,50 +1022,34 @@ class UtilityComponents {
     );
   }
 
-  static Future<String> showNameChangeDialog(
-      {context, String placeholder = "", String prefilledValue = ""}) async {
-    TextEditingController textController =
-        TextEditingController(text: prefilledValue);
+  static Future<String> showNameChangeDialog({context, String placeholder = "", String prefilledValue = ""}) async {
+    TextEditingController textController = TextEditingController(text: prefilledValue);
     if (prefilledValue.isNotEmpty) {
       textController.text = prefilledValue;
     }
     String answer = await showDialog(
         context: context,
         builder: (context) => AlertDialog(
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-              insetPadding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              insetPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
               backgroundColor: themeBottomSheetColor,
-              title: Text("Change Name",
-                  style: HMSTextStyle.setTextStyle(
-                      color: themeDefaultColor,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.15,
-                      fontSize: 20)),
+              title: Text("Change Name", style: HMSTextStyle.setTextStyle(color: themeDefaultColor, fontWeight: FontWeight.w600, letterSpacing: 0.15, fontSize: 20)),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   TextField(
-                    style:
-                        TextStyle(color: HMSThemeColors.onSurfaceHighEmphasis),
+                    style: TextStyle(color: HMSThemeColors.onSurfaceHighEmphasis),
                     textCapitalization: TextCapitalization.words,
                     textInputAction: TextInputAction.done,
-                    onSubmitted: (value) => (textController.text == "")
-                        ? Utilities.showToast("Name can't be empty")
-                        : Navigator.pop(context, textController.text.trim()),
+                    onSubmitted: (value) => (textController.text == "") ? Utilities.showToast("Name can't be empty") : Navigator.pop(context, textController.text.trim()),
                     autofocus: true,
                     controller: textController,
                     decoration: InputDecoration(
                       fillColor: themeSurfaceColor,
                       filled: true,
                       hintText: "Enter Name",
-                      contentPadding:
-                          const EdgeInsets.only(left: 10, right: 10),
-                      enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: borderColor, width: 1),
-                          borderRadius:
-                              const BorderRadius.all(Radius.circular(8))),
+                      contentPadding: const EdgeInsets.only(left: 10, right: 10),
+                      enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: borderColor, width: 1), borderRadius: const BorderRadius.all(Radius.circular(8))),
                       border: const OutlineInputBorder(
                         borderRadius: BorderRadius.all(Radius.circular(8)),
                       ),
@@ -1268,37 +1063,22 @@ class UtilityComponents {
                   children: [
                     ElevatedButton(
                         style: ButtonStyle(
-                            shadowColor:
-                                MaterialStateProperty.all(themeSurfaceColor),
-                            backgroundColor: MaterialStateProperty.all(
-                                themeBottomSheetColor),
-                            shape: MaterialStateProperty.all<
-                                RoundedRectangleBorder>(RoundedRectangleBorder(
-                              side: const BorderSide(
-                                  width: 1,
-                                  color: Color.fromRGBO(107, 125, 153, 1)),
+                            shadowColor: MaterialStateProperty.all(themeSurfaceColor),
+                            backgroundColor: MaterialStateProperty.all(themeBottomSheetColor),
+                            shape: MaterialStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(
+                              side: const BorderSide(width: 1, color: Color.fromRGBO(107, 125, 153, 1)),
                               borderRadius: BorderRadius.circular(8.0),
                             ))),
                         onPressed: () => Navigator.pop(context, ""),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 12),
-                          child: Text('Cancel',
-                              style: HMSTextStyle.setTextStyle(
-                                  color: themeDefaultColor,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: 0.50)),
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 12),
+                          child: Text('Cancel', style: HMSTextStyle.setTextStyle(color: themeDefaultColor, fontSize: 16, fontWeight: FontWeight.w600, letterSpacing: 0.50)),
                         )),
                     ElevatedButton(
                       style: ButtonStyle(
-                          shadowColor:
-                              MaterialStateProperty.all(themeSurfaceColor),
-                          backgroundColor:
-                              MaterialStateProperty.all(hmsdefaultColor),
-                          shape:
-                              MaterialStateProperty.all<RoundedRectangleBorder>(
-                                  RoundedRectangleBorder(
+                          shadowColor: MaterialStateProperty.all(themeSurfaceColor),
+                          backgroundColor: MaterialStateProperty.all(hmsdefaultColor),
+                          shape: MaterialStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(
                             side: BorderSide(width: 1, color: hmsdefaultColor),
                             borderRadius: BorderRadius.circular(8.0),
                           ))),
@@ -1311,15 +1091,10 @@ class UtilityComponents {
                           {Navigator.pop(context, textController.text.trim())}
                       },
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 12),
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 12),
                         child: Text(
                           'Change',
-                          style: HMSTextStyle.setTextStyle(
-                              color: hmsWhiteColor,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 0.50),
+                          style: HMSTextStyle.setTextStyle(color: hmsWhiteColor, fontSize: 16, fontWeight: FontWeight.w600, letterSpacing: 0.50),
                         ),
                       ),
                     ),
@@ -1344,15 +1119,11 @@ class UtilityComponents {
         context: context,
         builder: (ctx) => StatefulBuilder(builder: (ctx, setState) {
               return AlertDialog(
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-                actionsPadding:
-                    const EdgeInsets.only(left: 20, right: 20, bottom: 10),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                actionsPadding: const EdgeInsets.only(left: 20, right: 20, bottom: 10),
                 backgroundColor: themeBottomSheetColor,
-                insetPadding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                contentPadding: const EdgeInsets.only(
-                    top: 20, bottom: 15, left: 24, right: 24),
+                insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                contentPadding: const EdgeInsets.only(top: 20, bottom: 15, left: 24, right: 24),
                 title: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -1365,9 +1136,7 @@ class UtilityComponents {
                     const SizedBox(
                       height: 8,
                     ),
-                    HMSSubtitleText(
-                        text: "Select Audio Mixing mode",
-                        textColor: themeSubHeadingColor),
+                    HMSSubtitleText(text: "Select Audio Mixing mode", textColor: themeSubHeadingColor),
                   ],
                 ),
                 content: Container(
@@ -1375,10 +1144,7 @@ class UtilityComponents {
                   decoration: BoxDecoration(
                     color: themeSurfaceColor,
                     borderRadius: BorderRadius.circular(10.0),
-                    border: Border.all(
-                        color: borderColor,
-                        style: BorderStyle.solid,
-                        width: 0.80),
+                    border: Border.all(color: borderColor, style: BorderStyle.solid, width: 0.80),
                   ),
                   child: DropdownButtonHideUnderline(
                       child: HMSDropDown(
@@ -1421,59 +1187,31 @@ class UtilityComponents {
                     children: [
                       ElevatedButton(
                           style: ButtonStyle(
-                              shadowColor:
-                                  MaterialStateProperty.all(themeSurfaceColor),
-                              backgroundColor: MaterialStateProperty.all(
-                                  themeBottomSheetColor),
-                              shape: MaterialStateProperty.all<
-                                      RoundedRectangleBorder>(
-                                  RoundedRectangleBorder(
-                                side: const BorderSide(
-                                    width: 1,
-                                    color: Color.fromRGBO(107, 125, 153, 1)),
+                              shadowColor: MaterialStateProperty.all(themeSurfaceColor),
+                              backgroundColor: MaterialStateProperty.all(themeBottomSheetColor),
+                              shape: MaterialStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(
+                                side: const BorderSide(width: 1, color: Color.fromRGBO(107, 125, 153, 1)),
                                 borderRadius: BorderRadius.circular(8.0),
                               ))),
                           onPressed: () => Navigator.pop(context, false),
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 12, horizontal: 10),
-                            child: Text('Cancel',
-                                style: HMSTextStyle.setTextStyle(
-                                    color: themeDefaultColor,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    letterSpacing: 0.50)),
+                            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+                            child: Text('Cancel', style: HMSTextStyle.setTextStyle(color: themeDefaultColor, fontSize: 16, fontWeight: FontWeight.w600, letterSpacing: 0.50)),
                           )),
                       ElevatedButton(
                         style: ButtonStyle(
-                            shadowColor:
-                                MaterialStateProperty.all(themeSurfaceColor),
-                            backgroundColor:
-                                MaterialStateProperty.all(hmsdefaultColor),
-                            shape: MaterialStateProperty.all<
-                                RoundedRectangleBorder>(RoundedRectangleBorder(
-                              side:
-                                  BorderSide(width: 1, color: hmsdefaultColor),
+                            shadowColor: MaterialStateProperty.all(themeSurfaceColor),
+                            backgroundColor: MaterialStateProperty.all(hmsdefaultColor),
+                            shape: MaterialStateProperty.all<RoundedRectangleBorder>(RoundedRectangleBorder(
+                              side: BorderSide(width: 1, color: hmsdefaultColor),
                               borderRadius: BorderRadius.circular(8.0),
                             ))),
-                        onPressed: () => {
-                          if (meetingStore.isAudioShareStarted)
-                            meetingStore.setAudioMixingMode(valueChoose)
-                          else
-                            Utilities.showToast("Audio Share not enabled"),
-                          Navigator.pop(context),
-                          Navigator.pop(context)
-                        },
+                        onPressed: () => {if (meetingStore.isAudioShareStarted) meetingStore.setAudioMixingMode(valueChoose) else Utilities.showToast("Audio Share not enabled"), Navigator.pop(context), Navigator.pop(context)},
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 12, horizontal: 10),
+                          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
                           child: Text(
                             'Change',
-                            style: HMSTextStyle.setTextStyle(
-                                color: themeDefaultColor,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 0.50),
+                            style: HMSTextStyle.setTextStyle(color: themeDefaultColor, fontSize: 16, fontWeight: FontWeight.w600, letterSpacing: 0.50),
                           ),
                         ),
                       ),
