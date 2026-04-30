@@ -89,6 +89,7 @@ class _PreviewPageState extends State<PreviewPage> {
               isNoiseCancellationEnabled:
                   previewStore.isNoiseCancellationEnabled,
               meetingScreenAppBar: widget.meetingScreenAppBar,
+              preViewScreenAppBar: widget.preViewScreenAppBar,
               dialInPopupWidget: widget.dialInPopupWidget,
               onTapped: (value) {
                 widget.onTapped!(value);
