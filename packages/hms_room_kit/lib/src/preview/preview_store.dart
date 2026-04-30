@@ -9,6 +9,7 @@ import 'package:hmssdk_flutter/hmssdk_flutter.dart';
 import 'package:hms_room_kit/hms_room_kit.dart';
 import 'package:hms_room_kit/src/layout_api/hms_room_layout.dart';
 import 'package:hms_room_kit/src/hmssdk_interactor.dart';
+import 'package:hms_room_kit/src/services/hms_logger.dart';
 
 class PreviewStore extends ChangeNotifier
     implements HMSPreviewListener, HMSLogListener {
@@ -66,6 +67,8 @@ class PreviewStore extends ChangeNotifier
   @override
   void onPreview({required HMSRoom room, required List<HMSTrack> localTracks}) {
     log("onPreview-> room: ${room.toString()}");
+    HMSLogger().setSessionContext(roomId: room.id, sessionId: room.sessionId);
+    HMSLogger().logInfo('Waiting Screen - Preview Ready', data: {'room_id': room.id, 'peer_count': room.peerCount});
     onRoomIdAvailable?.call(room.id);
     this.room = room;
     checkNoiseCancellationAvailablility();
@@ -196,12 +199,14 @@ class PreviewStore extends ChangeNotifier
   void toggleCameraMuteState() {
     hmsSDKInteractor.toggleCameraMuteState();
     isVideoOn = !isVideoOn;
+    HMSLogger().logCameraToggle(isVideoOn, reason: 'Toggled in waiting screen');
     notifyListeners();
   }
 
   void toggleMicMuteState() {
     hmsSDKInteractor.toggleMicMuteState();
     isAudioOn = !isAudioOn;
+    HMSLogger().logMicrophoneToggle(!isAudioOn, reason: 'Toggled in waiting screen');
     notifyListeners();
   }
 

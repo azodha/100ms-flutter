@@ -8,6 +8,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:hms_room_kit/hms_room_kit.dart';
 import 'package:hms_room_kit/src/layout_api/hms_room_layout.dart' as roomlayout;
 import 'package:hms_room_kit/src/widgets/common_widgets/hms_subheading_text.dart';
+import 'package:hms_room_kit/src/services/hms_logger.dart';
 
 ///[HMSLeftRoomScreen] is the screen that is shown after a user leaves the room
 class HMSLeftRoomScreen extends StatelessWidget {
@@ -132,6 +133,7 @@ class HMSLeftRoomScreen extends StatelessWidget {
                             borderRadius: BorderRadius.circular(8.0),
                           ))),
                       onPressed: () => {
+                            HMSLogger().logButtonTap('Rejoin Meeting'),
                             HMSThemeColors.resetLayoutColors(),
                             Navigator.pushReplacement(
                                 context,
@@ -141,10 +143,6 @@ class HMSLeftRoomScreen extends StatelessWidget {
                                           authToken: Constant.authToken,
                                           options: Constant.prebuiltOptions,
                                           onLeave: Constant.onLeave,
-                                          meetingScreenAppBar:
-                                              meetingScreenAppBar,
-                                          preViewScreenAppBar:
-                                              preViewScreenAppBar,
                                           onTapped: (value) {
                                             onTapped!(value);
                                           },

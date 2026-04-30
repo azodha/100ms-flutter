@@ -12,6 +12,7 @@ import 'package:hms_room_kit/src/layout_api/hms_room_layout.dart';
 import 'package:hms_room_kit/src/meeting/meeting_page.dart';
 import 'package:hms_room_kit/src/meeting/meeting_store.dart';
 import 'package:hms_room_kit/src/widgets/common_widgets/hms_loader.dart';
+import 'package:hms_room_kit/src/services/hms_logger.dart';
 import 'package:hmssdk_flutter/hmssdk_flutter.dart';
 import 'package:provider/provider.dart';
 
@@ -112,6 +113,7 @@ class _MeetingScreenControllerState extends State<MeetingScreenController> {
   ///This function joins the room only if the name is not empty
   void _joinMeeting() async {
     FocusManager.instance.primaryFocus?.unfocus();
+    HMSLogger().logButtonTap('Join Meeting');
     if (mounted) {
       setState(() {
         showLoader = true;
@@ -120,6 +122,7 @@ class _MeetingScreenControllerState extends State<MeetingScreenController> {
 
     ///We join the room here
     await _meetingStore.join(widget.user, widget.tokenData);
+    HMSLogger().logInfo('User Joined Meeting', data: {'user': widget.user});
     setState(() {
       showLoader = false;
     });

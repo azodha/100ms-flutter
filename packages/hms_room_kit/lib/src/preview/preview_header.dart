@@ -30,9 +30,10 @@ class PreviewHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Container(
-          child: preViewScreenAppBar,
-        ),
+        if (preViewScreenAppBar != null)
+          Container(
+            child: preViewScreenAppBar,
+          ),
         Container(
           width: width,
           child: Padding(
