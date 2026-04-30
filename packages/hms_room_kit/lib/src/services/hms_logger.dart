@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:logging/logging.dart';
 
 class HMSLogger {
@@ -10,6 +12,11 @@ class HMSLogger {
   // Track audio flow state to avoid duplicate logs
   final Map<String, bool> _localAudioFlowState = {'local': false};
   final Map<String, bool> _remoteAudioFlowState = {};
+
+  // Track latest bitrate values for periodic logging
+  double? _lastLocalAudioBitrate;
+  final Map<String, double> _lastRemoteAudioBitrate = {};
+  Timer? _bitratePollTimer;
 
   factory HMSLogger() {
     return _instance;
@@ -65,10 +72,56 @@ class HMSLogger {
 
   void logBitrate(double outgoingBitrate, {String? peerId, String? quality}) {
     if (peerId == 'local' && quality == 'audio') {
+      _lastLocalAudioBitrate = outgoingBitrate;
       _trackLocalAudioFlow(outgoingBitrate);
+      _ensureBitratePollingStarted();
     } else if (peerId != null && peerId != 'local' && quality == 'audio') {
+      _lastRemoteAudioBitrate[peerId] = outgoingBitrate;
       _trackRemoteAudioFlow(peerId, outgoingBitrate);
+      _ensureBitratePollingStarted();
     }
+  }
+
+  void _ensureBitratePollingStarted() {
+    if (_bitratePollTimer == null || !_bitratePollTimer!.isActive) {
+      _startBitratePolling();
+    }
+  }
+
+  void _startBitratePolling() {
+    _bitratePollTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+      if (_lastLocalAudioBitrate != null) {
+        final logData = {
+          'action': 'bitrate_poll',
+          'direction': 'outgoing',
+          'bitrate': _lastLocalAudioBitrate,
+        };
+        _logger.info('Local Audio Bitrate - Data: $logData');
+      }
+
+      for (final entry in _lastRemoteAudioBitrate.entries) {
+        final logData = {
+          'action': 'bitrate_poll',
+          'direction': 'incoming',
+          'peer_id': entry.key,
+          'bitrate': entry.value,
+        };
+        _logger.info('Remote Audio Bitrate - Data: $logData');
+      }
+    });
+  }
+
+  void stopBitratePolling() {
+    _bitratePollTimer?.cancel();
+    _bitratePollTimer = null;
+    _lastLocalAudioBitrate = null;
+    _lastRemoteAudioBitrate.clear();
+  }
+
+  void startAudioBitrateLogging({required Function addStatsListener}) {
+    _lastLocalAudioBitrate = 0;
+    addStatsListener();
+    _ensureBitratePollingStarted();
   }
 
   void _trackLocalAudioFlow(double bitrate) {

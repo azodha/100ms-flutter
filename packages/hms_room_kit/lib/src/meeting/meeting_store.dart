@@ -311,6 +311,9 @@ class MeetingStore extends ChangeNotifier
     WidgetsBinding.instance.addObserver(this);
     setMeetingModeUsingLayoutApi();
     setRecipientSelectorValue();
+    HMSLogger().startAudioBitrateLogging(
+      addStatsListener: () => _hmsSDKInteractor.addStatsListener(this),
+    );
     _hmsSDKInteractor.join(config: joinConfig);
     return null;
   }
@@ -345,6 +348,7 @@ class MeetingStore extends ChangeNotifier
     _hmsSDKInteractor.removeStatsListener(this);
     WidgetsBinding.instance.removeObserver(this);
     hmsException = null;
+    HMSLogger().stopBitratePolling();
     _hmsSDKInteractor.leave(hmsActionResultListener: this);
   }
 
