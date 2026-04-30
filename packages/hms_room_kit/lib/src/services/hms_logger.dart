@@ -77,9 +77,7 @@ class HMSLogger {
 
     if (isAudioFlowing != wasFlowing) {
       _localAudioFlowState['local'] = isAudioFlowing;
-      final message = isAudioFlowing
-          ? 'Local Audio Flow Started'
-          : 'Local Audio Flow Stopped';
+      final message = isAudioFlowing ? 'Local Audio Flow Started' : 'Local Audio Flow Stopped';
       final logData = {
         'action': 'audio_flow_change',
         'direction': 'outgoing',
@@ -96,9 +94,7 @@ class HMSLogger {
 
     if (isAudioFlowing != wasFlowing) {
       _remoteAudioFlowState[peerId] = isAudioFlowing;
-      final message = isAudioFlowing
-          ? 'Remote Audio Flow Started from $peerId'
-          : 'Remote Audio Flow Stopped from $peerId';
+      final message = isAudioFlowing ? 'Remote Audio Flow Started from $peerId' : 'Remote Audio Flow Stopped from $peerId';
       final logData = {
         'action': 'audio_flow_change',
         'direction': 'incoming',
@@ -118,18 +114,23 @@ class HMSLogger {
       if (reason != null) 'reason': reason,
     };
     _logger.info('$message - Data: $logData');
+    _trackLocalAudioState(isMuted);
   }
 
-  void logAudioState(bool isAudioEnabled, {String? peerId, required String direction}) {
-    final peer = peerId ?? 'local';
-    final message = '$direction Audio is ${isAudioEnabled ? 'Enabled' : 'Disabled'} for $peer';
-    final logData = {
-      'action': 'audio_state',
-      'direction': direction,
-      'peer_id': peer,
-      'is_enabled': isAudioEnabled,
-    };
-    _logger.info('$message - Data: $logData');
+  void _trackLocalAudioState(bool isMuted) {
+    final isAudioEnabled = !isMuted;
+    final wasAudioEnabled = _localAudioFlowState['local_enabled'] ?? false;
+
+    if (isAudioEnabled != wasAudioEnabled) {
+      _localAudioFlowState['local_enabled'] = isAudioEnabled;
+      final message = isAudioEnabled ? 'Local Audio Enabled' : 'Local Audio Disabled';
+      final logData = {
+        'action': 'audio_state_change',
+        'direction': 'outgoing',
+        'is_enabled': isAudioEnabled,
+      };
+      _logger.info('$message - Data: $logData');
+    }
   }
 
   void logCameraToggle(bool isOn, {String? reason}) {
