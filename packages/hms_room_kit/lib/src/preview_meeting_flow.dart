@@ -86,6 +86,7 @@ class _PreviewMeetingFlowState extends State<PreviewMeetingFlow> {
                 widget.onRoomIdAvailable(roomId);
               },
               dialInPopupWidget: widget.dialInPopupWidget,
-            ));
+            ),
+          );
   }
 }

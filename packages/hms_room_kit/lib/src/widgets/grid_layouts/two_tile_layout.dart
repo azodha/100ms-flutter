@@ -23,8 +23,11 @@ class TwoTileLayout extends StatelessWidget {
   final int startIndex;
   final List<PeerTrackNode> peerTracks;
 
-  const TwoTileLayout(
-      {super.key, required this.peerTracks, required this.startIndex});
+  const TwoTileLayout({
+    super.key,
+    required this.peerTracks,
+    required this.startIndex,
+  });
 
   @override
   Widget build(BuildContext context) {

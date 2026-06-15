@@ -18,11 +18,12 @@ class SideBySideLayout extends StatelessWidget {
   final int numberOfTiles;
   final int index;
   final List<PeerTrackNode> peerTracks;
-  const SideBySideLayout(
-      {super.key,
-      required this.numberOfTiles,
-      required this.index,
-      required this.peerTracks});
+  const SideBySideLayout({
+    super.key,
+    required this.numberOfTiles,
+    required this.index,
+    required this.peerTracks,
+  });
 
   @override
   Widget build(BuildContext context) {

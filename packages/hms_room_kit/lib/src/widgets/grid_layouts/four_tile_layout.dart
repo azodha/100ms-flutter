@@ -22,8 +22,11 @@ import 'package:hms_room_kit/src/widgets/grid_layouts/listenable_peer_widget.dar
 class FourTileLayout extends StatelessWidget {
   final int startIndex;
   final List<PeerTrackNode> peerTracks;
-  const FourTileLayout(
-      {super.key, required this.peerTracks, required this.startIndex});
+  const FourTileLayout({
+    super.key,
+    required this.peerTracks,
+    required this.startIndex,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -32,37 +35,43 @@ class FourTileLayout extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Expanded(
-          child: Row(children: [
-            Expanded(
-              child: ListenablePeerWidget(
-                  index: startIndex, peerTracks: peerTracks),
-            ),
-            const SizedBox(
-              width: 2,
-            ),
-            Expanded(
-              child: ListenablePeerWidget(
-                  index: startIndex + 1, peerTracks: peerTracks),
-            ),
-          ]),
+          child: Row(
+            children: [
+              Expanded(
+                child: ListenablePeerWidget(
+                  index: startIndex,
+                  peerTracks: peerTracks,
+                ),
+              ),
+              const SizedBox(width: 2),
+              Expanded(
+                child: ListenablePeerWidget(
+                  index: startIndex + 1,
+                  peerTracks: peerTracks,
+                ),
+              ),
+            ],
+          ),
         ),
-        const SizedBox(
-          height: 2,
-        ),
+        const SizedBox(height: 2),
         Expanded(
-          child: Row(children: [
-            Expanded(
-              child: ListenablePeerWidget(
-                  index: startIndex + 2, peerTracks: peerTracks),
-            ),
-            const SizedBox(
-              width: 2,
-            ),
-            Expanded(
-              child: ListenablePeerWidget(
-                  index: startIndex + 3, peerTracks: peerTracks),
-            ),
-          ]),
+          child: Row(
+            children: [
+              Expanded(
+                child: ListenablePeerWidget(
+                  index: startIndex + 2,
+                  peerTracks: peerTracks,
+                ),
+              ),
+              const SizedBox(width: 2),
+              Expanded(
+                child: ListenablePeerWidget(
+                  index: startIndex + 3,
+                  peerTracks: peerTracks,
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );

@@ -17,7 +17,8 @@ import 'package:tuple/tuple.dart';
 ///This class contains the utility functions used in the app
 class Utilities {
   static RegExp regexEmoji = RegExp(
-      r'(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])');
+    r'(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])',
+  );
 
   ///This function is used to get the avatar title
   static String getAvatarTitle(String name) {
@@ -64,7 +65,7 @@ class Utilities {
     const Alignment(-0.4, 0.2),
     const Alignment(0, 0.8),
     const Alignment(0.4, 0.9),
-    const Alignment(0.8, 0.5)
+    const Alignment(0.8, 0.5),
   ];
 
   ///This function is used to get Aspect Ratio of the screen
@@ -125,10 +126,10 @@ class Utilities {
 
   ///This function returns the question type for poll/quiz
   static List<Tuple2<String, HMSPollQuestionType>>
-      getQuestionTypeForPollQuiz() {
+  getQuestionTypeForPollQuiz() {
     return const [
       Tuple2("Single Choice", HMSPollQuestionType.singleChoice),
-      Tuple2("Multiple Choice", HMSPollQuestionType.multiChoice)
+      Tuple2("Multiple Choice", HMSPollQuestionType.multiChoice),
     ];
   }
 
@@ -173,6 +174,9 @@ class Utilities {
     if (Platform.isIOS) {
       await Permission.bluetooth.request();
     }
+    if (Platform.isAndroid) {
+      await Permission.bluetoothConnect.request();
+    }
     await Permission.phone.request();
 
     ///We check if the permissions are granted
@@ -187,6 +191,7 @@ class Utilities {
     } else if (Platform.isAndroid) {
       if (await Permission.camera.isGranted &&
           await Permission.microphone.isGranted &&
+          await Permission.bluetoothConnect.isGranted &&
           await Permission.phone.isGranted) {
         return true;
       }
@@ -194,19 +199,23 @@ class Utilities {
 
     ///We open the app settings if the user has permanently denied the permissions
     ///This is done because the user can't grant the permissions from the app now
-    bool isCameraPermissionsDenied = (await Permission.camera.isDenied &&
+    bool isCameraPermissionsDenied =
+        (await Permission.camera.isDenied &&
         !await Permission.camera.shouldShowRequestRationale);
     bool isMicrophonePermissionsDenied =
         (await Permission.microphone.isDenied &&
-            !await Permission.microphone.shouldShowRequestRationale);
+        !await Permission.microphone.shouldShowRequestRationale);
     bool isBluetoothPermissionsDenied = false;
     bool isPhonePermissionDenied = Platform.isAndroid
         ? (await Permission.phone.isDenied &&
-            !await Permission.phone.shouldShowRequestRationale)
+              !await Permission.phone.shouldShowRequestRationale)
         : false;
     if (Platform.isIOS) {
       isBluetoothPermissionsDenied =
           await Permission.bluetooth.isPermanentlyDenied;
+    } else if (Platform.isAndroid) {
+      isBluetoothPermissionsDenied =
+          await Permission.bluetoothConnect.isPermanentlyDenied;
     }
 
     ///We open the app settings if the user has permanently denied the permissions
@@ -287,8 +296,11 @@ class Utilities {
     //     duration: Duration(seconds: time));
   }
 
-  static void showTimedMetadata(String message,
-      {int time = 1, Alignment align = const Alignment(0, 0.8)}) {
+  static void showTimedMetadata(
+    String message, {
+    int time = 1,
+    Alignment align = const Alignment(0, 0.8),
+  }) {
     // BotToast.showText(
     //     align: align,
     //     wrapToastAnimation: (controller, cancelFunc, widget) =>
@@ -318,8 +330,10 @@ class Utilities {
     return prefs.getString(key) ?? "";
   }
 
-  static void saveStringData(
-      {required String key, required String value}) async {
+  static void saveStringData({
+    required String key,
+    required String value,
+  }) async {
     final prefs = await SharedPreferences.getInstance();
 
     prefs.setString(key, value);
@@ -343,8 +357,10 @@ class Utilities {
     return prefs.getBool(key);
   }
 
-  static Future<bool> saveBoolData(
-      {required String key, required bool value}) async {
+  static Future<bool> saveBoolData({
+    required String key,
+    required bool value,
+  }) async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.setBool(key, value);
   }
@@ -401,31 +417,34 @@ class Utilities {
     HMSAudioMode? audioMode,
   }) {
     return HMSTrackSetting(
-        audioTrackSetting: HMSAudioTrackSetting(
-
-            ///If audio mixer is disabled we set the audio source as null
-            ///Note that this is only required for iOS
-            audioSource: isAudioMixerDisabled
-                ? null
-                : HMSAudioMixerSource(node: [
-                    HMSAudioFilePlayerNode("audioFilePlayerNode"),
-                    HMSMicNode(),
-                    HMSScreenBroadcastAudioReceiverNode(),
-                  ]),
-            trackInitialState: joinWithMutedAudio
-                ? HMSTrackInitState.MUTED
-                : HMSTrackInitState.UNMUTED,
-            audioMode: audioMode,
-            enableNoiseCancellation: isNoiseCancellationEnabled,
-            enableAutomaticGainControl: isAutomaticGainControlEnabled,
-            enableNoiseSupression: isNoiseSuppressionEnabled),
-        videoTrackSetting: HMSVideoTrackSetting(
-            trackInitialState: joinWithMutedVideo
-                ? HMSTrackInitState.MUTED
-                : HMSTrackInitState.UNMUTED,
-            forceSoftwareDecoder: isSoftwareDecoderDisabled,
-            isVirtualBackgroundEnabled:
-                AppDebugConfig.isVirtualBackgroundEnabled));
+      audioTrackSetting: HMSAudioTrackSetting(
+        ///If audio mixer is disabled we set the audio source as null
+        ///Note that this is only required for iOS
+        audioSource: isAudioMixerDisabled
+            ? null
+            : HMSAudioMixerSource(
+                node: [
+                  HMSAudioFilePlayerNode("audioFilePlayerNode"),
+                  HMSMicNode(),
+                  HMSScreenBroadcastAudioReceiverNode(),
+                ],
+              ),
+        trackInitialState: joinWithMutedAudio
+            ? HMSTrackInitState.MUTED
+            : HMSTrackInitState.UNMUTED,
+        audioMode: audioMode,
+        enableNoiseCancellation: isNoiseCancellationEnabled,
+        enableAutomaticGainControl: isAutomaticGainControlEnabled,
+        enableNoiseSupression: isNoiseSuppressionEnabled,
+      ),
+      videoTrackSetting: HMSVideoTrackSetting(
+        trackInitialState: joinWithMutedVideo
+            ? HMSTrackInitState.MUTED
+            : HMSTrackInitState.UNMUTED,
+        forceSoftwareDecoder: isSoftwareDecoderDisabled,
+        isVirtualBackgroundEnabled: AppDebugConfig.isVirtualBackgroundEnabled,
+      ),
+    );
   }
 
   static String getTimedMetadataEmojiFromId(String emojiId) {
