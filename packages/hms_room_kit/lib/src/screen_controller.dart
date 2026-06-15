@@ -45,7 +45,19 @@ class ScreenController extends StatefulWidget {
 
   final Function(HMSPeer)? onPeerLeft;
 
-  const ScreenController({super.key, required this.roomCode, this.options, this.onLeave, this.meetingScreenAppBar, this.onTapped, this.onRoomIdAvailable, this.authToken, this.preViewScreenAppBar, this.dialInPopupWidget, this.onPeerLeft});
+  const ScreenController({
+    super.key,
+    required this.roomCode,
+    this.options,
+    this.onLeave,
+    this.authToken,
+    this.meetingScreenAppBar,
+    this.preViewScreenAppBar,
+    this.onTapped,
+    this.onRoomIdAvailable,
+    this.dialInPopupWidget,
+    this.onPeerLeft,
+  });
   @override
   State<ScreenController> createState() => _ScreenControllerState();
 }
@@ -103,15 +115,26 @@ class _ScreenControllerState extends State<ScreenController> {
   ///using the auth token
   ///If [getAuthTokenByRoomCode] fails it returns HMSException object
   ///else null
-  Future<HMSException?> _getAuthTokenAndSetLayout(HMSSDKInteractor hmssdkInteractor, String userName) async {
+  Future<HMSException?> _getAuthTokenAndSetLayout(
+    HMSSDKInteractor hmssdkInteractor,
+    String userName,
+  ) async {
     if (Constant.roomCode != null) {
-      tokenData = await hmssdkInteractor.getAuthTokenByRoomCode(userId: Constant.prebuiltOptions?.userId, roomCode: Constant.roomCode!, endPoint: Constant.tokenEndPoint);
+      tokenData = await hmssdkInteractor.getAuthTokenByRoomCode(
+        userId: Constant.prebuiltOptions?.userId,
+        roomCode: Constant.roomCode!,
+        endPoint: Constant.tokenEndPoint,
+      );
     } else {
       tokenData = Constant.authToken;
     }
 
     if ((tokenData is String?) && tokenData != null) {
-      await HMSRoomLayout.getRoomLayout(hmsSDKInteractor: hmssdkInteractor, authToken: tokenData, endPoint: Constant.layoutAPIEndPoint);
+      await HMSRoomLayout.getRoomLayout(
+        hmsSDKInteractor: hmssdkInteractor,
+        authToken: tokenData,
+        endPoint: Constant.layoutAPIEndPoint,
+      );
       return null;
     } else {
       return tokenData;
@@ -133,19 +156,40 @@ class _ScreenControllerState extends State<ScreenController> {
       });
     }
 
-    _hmsSDKInteractor = HMSSDKInteractor(iOSScreenshareConfig: widget.options?.iOSScreenshareConfig, joinWithMutedAudio: true, joinWithMutedVideo: true, isSoftwareDecoderDisabled: AppDebugConfig.isSoftwareDecoderDisabled, isAudioMixerDisabled: AppDebugConfig.isAudioMixerDisabled, isNoiseCancellationEnabled: widget.options?.enableNoiseCancellation ?? false, isAutomaticGainControlEnabled: widget.options?.isAutomaticGainControlEnabled ?? false, isNoiseSuppressionEnabled: widget.options?.isNoiseSuppressionEnabled ?? false, isPrebuilt: true);
+    _hmsSDKInteractor = HMSSDKInteractor(
+      iOSScreenshareConfig: widget.options?.iOSScreenshareConfig,
+      joinWithMutedAudio: true,
+      joinWithMutedVideo: true,
+      isSoftwareDecoderDisabled: AppDebugConfig.isSoftwareDecoderDisabled,
+      isAudioMixerDisabled: AppDebugConfig.isAudioMixerDisabled,
+      isNoiseCancellationEnabled:
+          widget.options?.enableNoiseCancellation ?? false,
+      isAutomaticGainControlEnabled:
+          widget.options?.isAutomaticGainControlEnabled ?? false,
+      isNoiseSuppressionEnabled:
+          widget.options?.isNoiseSuppressionEnabled ?? false,
+      isPrebuilt: true,
+    );
     await _hmsSDKInteractor.build();
 
-    var ans = await _getAuthTokenAndSetLayout(_hmsSDKInteractor, widget.options?.userName ?? "");
+    var ans = await _getAuthTokenAndSetLayout(
+      _hmsSDKInteractor,
+      widget.options?.userName ?? "",
+    );
 
     ///If fetching auth token fails then we show the error dialog
     ///with the error message and description
     if (ans != null && mounted) {
       showGeneralDialog(
-          context: context,
-          pageBuilder: (_, data, __) {
-            return UtilityComponents.showFailureError(ans, context, () => Navigator.of(context).popUntil((route) => route.isFirst));
-          });
+        context: context,
+        pageBuilder: (_, data, __) {
+          return UtilityComponents.showFailureError(
+            ans,
+            context,
+            () => Navigator.of(context).popUntil((route) => route.isFirst),
+          );
+        },
+      );
     } else {
       Constant.debugMode = AppDebugConfig.isDebugMode;
       if (mounted) {
@@ -192,7 +236,10 @@ class _ScreenControllerState extends State<ScreenController> {
                   },
                   dialInPopupWidget: widget.dialInPopupWidget,
                 )
-              : PreviewPermissions(options: widget.options, callback: _isPermissionGrantedCallback),
+              : PreviewPermissions(
+                  options: widget.options,
+                  callback: _isPermissionGrantedCallback,
+                ),
     );
   }
 }

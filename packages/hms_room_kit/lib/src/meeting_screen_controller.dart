@@ -157,29 +157,31 @@ class _MeetingScreenControllerState extends State<MeetingScreenController> {
         : ListenableProvider.value(
             value: _meetingStore,
             child: Selector<MeetingStore, String?>(
-                selector: (_, meetingStore) =>
-                    meetingStore.localPeer?.role.name,
-                builder: (_, data, __) {
-                  setScreenRotation();
-                  return (HMSRoomLayout.roleLayoutData?.screens?.conferencing
-                              ?.hlsLiveStreaming !=
-                          null)
-                      ? ListenableProvider.value(
-                          value: _hlsPlayerStore, child: const HLSViewerPage())
-                      : MeetingPage(
-                          isRoomMute: widget.isRoomMute,
-                          currentAudioDeviceMode: widget.currentAudioDeviceMode,
-                          isNoiseCancellationEnabled:
-                              widget.isNoiseCancellationEnabled,
-                          meetingScreenAppBar: widget.meetingScreenAppBar,
-                          preViewScreenAppBar: widget.preViewScreenAppBar,
-                          dialInPopupWidget: widget.dialInPopupWidget,
-                          onTapped: (value) {
-                            widget.onTapped!(value);
-                          },
-                          onRoomIdAvailable: widget.onRoomIdAvailable,
-                        );
-                }),
+              selector: (_, meetingStore) => meetingStore.localPeer?.role.name,
+              builder: (_, data, __) {
+                setScreenRotation();
+                return (HMSRoomLayout.roleLayoutData?.screens?.conferencing
+                            ?.hlsLiveStreaming !=
+                        null)
+                    ? ListenableProvider.value(
+                        value: _hlsPlayerStore,
+                        child: const HLSViewerPage(),
+                      )
+                    : MeetingPage(
+                        isRoomMute: widget.isRoomMute,
+                        currentAudioDeviceMode: widget.currentAudioDeviceMode,
+                        isNoiseCancellationEnabled:
+                            widget.isNoiseCancellationEnabled,
+                        meetingScreenAppBar: widget.meetingScreenAppBar,
+                        preViewScreenAppBar: widget.preViewScreenAppBar,
+                        dialInPopupWidget: widget.dialInPopupWidget,
+                        onTapped: (value) {
+                          widget.onTapped!(value);
+                        },
+                        onRoomIdAvailable: widget.onRoomIdAvailable,
+                      );
+              },
+            ),
           );
   }
 }

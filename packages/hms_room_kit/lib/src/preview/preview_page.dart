@@ -54,9 +54,10 @@ class _PreviewPageState extends State<PreviewPage> {
   void initState() {
     super.initState();
     nameController = TextEditingController(text: widget.name);
-    context
-        .read<PreviewStore>()
-        .startPreview(userName: widget.name, tokenData: widget.tokenData);
+    context.read<PreviewStore>().startPreview(
+          userName: widget.name,
+          tokenData: widget.tokenData,
+        );
   }
 
   @override
@@ -77,27 +78,29 @@ class _PreviewPageState extends State<PreviewPage> {
     }
     previewStore.removePreviewListener();
 
-    Navigator.of(context).pushReplacement(MaterialPageRoute(
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
         builder: (context) => MeetingScreenController(
-              role: role,
-              localPeerNetworkQuality: localPeerNetworkQuality,
-              user: nameController.text.trim(),
-              isRoomMute: isRoomMute,
-              currentAudioDeviceMode: currentAudioDeviceMode,
-              tokenData: widget.tokenData,
-              hmsSDKInteractor: previewStore.hmsSDKInteractor,
-              isNoiseCancellationEnabled:
-                  previewStore.isNoiseCancellationEnabled,
-              meetingScreenAppBar: widget.meetingScreenAppBar,
-              preViewScreenAppBar: widget.preViewScreenAppBar,
-              dialInPopupWidget: widget.dialInPopupWidget,
-              onTapped: (value) {
-                widget.onTapped!(value);
-              },
-              onRoomIdAvailable: (roomId) {
-                widget.onRoomIdAvailable(roomId);
-              },
-            )));
+          role: role,
+          localPeerNetworkQuality: localPeerNetworkQuality,
+          user: nameController.text.trim(),
+          isRoomMute: isRoomMute,
+          currentAudioDeviceMode: currentAudioDeviceMode,
+          tokenData: widget.tokenData,
+          hmsSDKInteractor: previewStore.hmsSDKInteractor,
+          isNoiseCancellationEnabled: previewStore.isNoiseCancellationEnabled,
+          meetingScreenAppBar: widget.meetingScreenAppBar,
+          preViewScreenAppBar: widget.preViewScreenAppBar,
+          dialInPopupWidget: widget.dialInPopupWidget,
+          onTapped: (value) {
+            widget.onTapped!(value);
+          },
+          onRoomIdAvailable: (roomId) {
+            widget.onRoomIdAvailable(roomId);
+          },
+        ),
+      ),
+    );
   }
 
   @override

@@ -60,7 +60,8 @@ class HMSPrebuilt extends StatelessWidget {
   }) {
     if (roomCode == null && authToken == null) {
       throw ArgumentError.notNull(
-          "At least one parameter roomCode or authToken must be provided.");
+        "At least one parameter roomCode or authToken must be provided.",
+      );
     }
   }
 

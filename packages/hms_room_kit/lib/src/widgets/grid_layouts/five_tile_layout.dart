@@ -24,8 +24,11 @@ import 'package:hms_room_kit/src/widgets/grid_layouts/listenable_peer_widget.dar
 class FiveTileLayout extends StatelessWidget {
   final int startIndex;
   final List<PeerTrackNode> peerTracks;
-  const FiveTileLayout(
-      {super.key, required this.peerTracks, required this.startIndex});
+  const FiveTileLayout({
+    super.key,
+    required this.peerTracks,
+    required this.startIndex,
+  });
 
   @override
   Widget build(BuildContext context) {

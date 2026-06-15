@@ -6,7 +6,6 @@ import 'dart:ui';
 import 'package:app_links/app_links.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
-import 'package:firebase_dynamic_links/firebase_dynamic_links.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -20,6 +19,7 @@ import 'package:hmssdk_flutter_example/room_service.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:safe_device/safe_device.dart';
 import 'package:uuid/uuid.dart';
 
 bool _initialURILinkHandled = false;
@@ -42,14 +42,10 @@ void main() async {
 
   Provider.debugCheckInvalidValueType = null;
 
-  // Get any initial links
-  final PendingDynamicLinkData? initialLink =
-      await FirebaseDynamicLinks.instance.getInitialLink();
-
   await SystemChrome.setPreferredOrientations(
     [DeviceOrientation.portraitUp],
   );
-  runApp(HMSExampleApp(initialLink: initialLink?.link));
+  runApp(HMSExampleApp());
 }
 
 ///This function sets up the foreground service interaction
@@ -60,8 +56,7 @@ void startCallback() {
 }
 
 class HMSExampleApp extends StatefulWidget {
-  final Uri? initialLink;
-  HMSExampleApp({Key? key, this.initialLink}) : super(key: key);
+  HMSExampleApp({Key? key}) : super(key: key);
 
   @override
   _HMSExampleAppState createState() => _HMSExampleAppState();
@@ -102,7 +97,6 @@ class _HMSExampleAppState extends State<HMSExampleApp>
     super.initState();
     _initURIHandler();
     _incomingLinkHandler();
-    initDynamicLinks();
     _controller = AnimationController(
       duration: Duration(seconds: (5)),
       vsync: this,
@@ -113,11 +107,8 @@ class _HMSExampleAppState extends State<HMSExampleApp>
     if (!_initialURILinkHandled) {
       _initialURILinkHandled = true;
       try {
-        if (widget.initialLink != null) {
-          return;
-        }
         _appLinks = AppLinks();
-        _currentURI = await _appLinks?.getInitialAppLink();
+        _currentURI = await _appLinks?.getInitialLink();
         if (_currentURI != null) {
           if (!mounted) {
             return;
@@ -158,29 +149,6 @@ class _HMSExampleAppState extends State<HMSExampleApp>
           return;
         }
       });
-    }
-  }
-
-  Future<void> initDynamicLinks() async {
-    FirebaseDynamicLinks.instance.onLink
-        .listen((PendingDynamicLinkData dynamicLinkData) {
-      if (!mounted) {
-        return;
-      }
-      if (dynamicLinkData.link.toString().length == 0) {
-        return;
-      }
-      setState(() {
-        _currentURI = dynamicLinkData.link;
-      });
-    }).onError((error) {
-      print('onLink error');
-      print(error.message);
-    });
-
-    if (widget.initialLink != null) {
-      _currentURI = widget.initialLink;
-      setState(() {});
     }
   }
 
@@ -250,6 +218,71 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     _initPackageInfo();
     getData();
+    _checkDeviceSecurity();
+  }
+
+  /// VAPT Fix: Root/Jailbreak Detection
+  /// Checks if the device is rooted (Android) or jailbroken (iOS).
+  /// Rooted/jailbroken devices have a compromised security sandbox, which means
+  /// other apps with root access could potentially read this app's private data
+  /// (auth tokens, session info) or hook into the app's runtime.
+  /// We show a warning but still allow the user to continue.
+  Future<void> _checkDeviceSecurity() async {
+    try {
+      bool isJailBroken = await SafeDevice.isJailBroken;
+      if (isJailBroken && mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (_) => AlertDialog(
+            backgroundColor: themeSurfaceColor,
+            title: Text(
+              "Security Warning",
+              style: HMSTextStyle.setTextStyle(
+                color: themeDefaultColor,
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            content: Text(
+              "This device appears to be rooted/jailbroken. "
+              "Your data may not be secure on this device. "
+              "Proceed with caution.",
+              style: HMSTextStyle.setTextStyle(
+                color: themeSubHeadingColor,
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => SystemNavigator.pop(),
+                child: Text(
+                  "Exit",
+                  style: HMSTextStyle.setTextStyle(
+                    color: Colors.redAccent,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  "Continue Anyway",
+                  style: HMSTextStyle.setTextStyle(
+                    color: hmsdefaultColor,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      // If the check fails (e.g., on unsupported platforms), silently continue
+      debugPrint("Root/jailbreak detection failed: $e");
+    }
   }
 
   void getData() async {
@@ -263,7 +296,8 @@ class _HomePageState extends State<HomePage> {
     if (widget.deepLinkURL == null && savedMeetingUrl.isNotEmpty) {
       meetingLinkController.text = savedMeetingUrl;
     } else {
-      meetingLinkController.text = widget.deepLinkURL ?? "";
+      meetingLinkController.text = widget.deepLinkURL ??
+          "https://hmsflutter.app.100ms.live/meeting/cte-xyht-skd";
     }
 
     int audioModeInt = await Utilities.getIntData(key: "audio-mode");
@@ -495,15 +529,15 @@ class _HomePageState extends State<HomePage> {
                               Expanded(
                                   child: ElevatedButton(
                                 style: ButtonStyle(
-                                    shadowColor: MaterialStateProperty.all(
+                                    shadowColor: WidgetStateProperty.all(
                                         themeSurfaceColor),
                                     backgroundColor:
                                         meetingLinkController.text.isEmpty
-                                            ? MaterialStateProperty.all(
+                                            ? WidgetStateProperty.all(
                                                 themeSurfaceColor)
-                                            : MaterialStateProperty.all(
+                                            : WidgetStateProperty.all(
                                                 hmsdefaultColor),
-                                    shape: MaterialStateProperty.all<
+                                    shape: WidgetStateProperty.all<
                                             RoundedRectangleBorder>(
                                         RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(8.0),
@@ -576,12 +610,11 @@ class _HomePageState extends State<HomePage> {
                   width: width * 0.95,
                   child: ElevatedButton(
                     style: ButtonStyle(
-                        shadowColor: MaterialStateProperty.all(hmsdefaultColor),
+                        shadowColor: WidgetStateProperty.all(hmsdefaultColor),
                         backgroundColor:
-                            MaterialStateProperty.all(hmsdefaultColor),
-                        shape:
-                            MaterialStateProperty.all<RoundedRectangleBorder>(
-                                RoundedRectangleBorder(
+                            WidgetStateProperty.all(hmsdefaultColor),
+                        shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+                            RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8.0),
                         ))),
                     onPressed: () async {
