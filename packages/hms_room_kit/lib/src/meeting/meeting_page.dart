@@ -129,10 +129,11 @@ class _MeetingPageState extends State<MeetingPage> {
                                     body: SafeArea(
                                       child: Theme(
                                         data: ThemeData(brightness: Brightness.dark, primaryColor: HMSThemeColors.primaryDefault, scaffoldBackgroundColor: HMSThemeColors.backgroundDim),
-                                        child: SingleChildScrollView(
+                                        child: LayoutBuilder(builder: (context, constraints) {
+                                          return SingleChildScrollView(
                                           child: SizedBox(
-                                          width: MediaQuery.of(context).size.width,
-                                          height: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top - MediaQuery.of(context).padding.bottom,
+                                          width: constraints.maxWidth,
+                                          height: constraints.maxHeight,
                                           child: Stack(
                                             children: [
                                               ChangeNotifierProvider.value(value: _visibilityController, child: MeetingGridComponent(visibilityController: _visibilityController)),
@@ -283,7 +284,8 @@ class _MeetingPageState extends State<MeetingPage> {
                                             ],
                                           ),
                                         ),
-                                        ),
+                                        );
+                                        }),
                                       ),
                                     ),
                                   );

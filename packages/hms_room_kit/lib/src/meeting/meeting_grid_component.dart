@@ -71,10 +71,10 @@ class MeetingGridComponent extends StatelessWidget {
                             MediaQuery.of(context).padding.top -
                             MediaQuery.of(context).padding.bottom -
                             (Platform.isAndroid
-                                ? 160
+                                ? 220
                                 : Platform.isIOS
-                                    ? 230
-                                    : 160)
+                                    ? 290
+                                    : 220)
                         : MediaQuery.of(context).size.height -
                             MediaQuery.of(context).padding.top -
                             MediaQuery.of(context).padding.bottom -
