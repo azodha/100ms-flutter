@@ -43,6 +43,9 @@ class ScreenController extends StatefulWidget {
 
   final Widget? dialInPopupWidget;
 
+  ///An optional widget rendered in the meeting header (next to the logo).
+  final Widget? reportIssueWidget;
+
   final Function(HMSPeer)? onPeerLeft;
 
   const ScreenController({
@@ -56,6 +59,7 @@ class ScreenController extends StatefulWidget {
     this.onTapped,
     this.onRoomIdAvailable,
     this.dialInPopupWidget,
+    this.reportIssueWidget,
     this.onPeerLeft,
   });
   @override
@@ -235,6 +239,7 @@ class _ScreenControllerState extends State<ScreenController> {
                     widget.onRoomIdAvailable!(roomId);
                   },
                   dialInPopupWidget: widget.dialInPopupWidget,
+                  reportIssueWidget: widget.reportIssueWidget,
                 )
               : PreviewPermissions(
                   options: widget.options,

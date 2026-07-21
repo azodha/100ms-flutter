@@ -32,6 +32,7 @@ class PreviewPage extends StatefulWidget {
   final Function(BuildContext)? onTapped;
   final Function(String roomId) onRoomIdAvailable;
   final Widget? dialInPopupWidget;
+  final Widget? reportIssueWidget;
   const PreviewPage({
     super.key,
     required this.name,
@@ -42,6 +43,7 @@ class PreviewPage extends StatefulWidget {
     required this.tokenData,
     required this.onRoomIdAvailable,
     this.dialInPopupWidget,
+    this.reportIssueWidget,
   });
   @override
   State<PreviewPage> createState() => _PreviewPageState();
@@ -92,6 +94,7 @@ class _PreviewPageState extends State<PreviewPage> {
           meetingScreenAppBar: widget.meetingScreenAppBar,
           preViewScreenAppBar: widget.preViewScreenAppBar,
           dialInPopupWidget: widget.dialInPopupWidget,
+          reportIssueWidget: widget.reportIssueWidget,
           onTapped: (value) {
             widget.onTapped!(value);
           },

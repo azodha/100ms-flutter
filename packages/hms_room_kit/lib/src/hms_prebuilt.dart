@@ -38,6 +38,10 @@ class HMSPrebuilt extends StatelessWidget {
   final Widget? preViewScreenAppBar;
   final Widget? dialInPopupWidget;
 
+  ///An optional widget rendered in the meeting header (next to the logo).
+  ///The app can pass a button here, e.g. to open a "report issue" bottom sheet.
+  final Widget? reportIssueWidget;
+
   final Function(BuildContext)? onTapped;
 
   final Function(String roomId)? onRoomIdAvailable;
@@ -56,6 +60,7 @@ class HMSPrebuilt extends StatelessWidget {
     this.onRoomIdAvailable,
     this.authToken,
     this.dialInPopupWidget,
+    this.reportIssueWidget,
     this.onPeerLeft,
   }) {
     if (roomCode == null && authToken == null) {
@@ -93,6 +98,7 @@ class HMSPrebuilt extends StatelessWidget {
         onRoomIdAvailable!(roomId);
       },
       dialInPopupWidget: dialInPopupWidget,
+      reportIssueWidget: reportIssueWidget,
       onPeerLeft: onPeerLeft,
     );
   }

@@ -23,7 +23,11 @@ import 'package:hms_room_kit/src/widgets/common_widgets/hms_embedded_button.dart
 ///It contains the logo, live indicator, recording indicator, number of peers
 ///and the switch camera and audio device selection buttons
 class MeetingHeader extends StatefulWidget {
-  const MeetingHeader({super.key});
+  const MeetingHeader({this.reportIssueWidget, super.key});
+
+  ///An optional app-provided widget rendered next to the logo.
+  ///Used, for example, to expose a "report issue" button.
+  final Widget? reportIssueWidget;
 
   @override
   State<MeetingHeader> createState() => _MeetingHeaderState();
@@ -71,6 +75,10 @@ class _MeetingHeaderState extends State<MeetingHeader> {
                                     height: 30,
                                     width: 30,
                                   ),
+                        if (widget.reportIssueWidget != null) ...[
+                          const SizedBox(width: 12),
+                          widget.reportIssueWidget!,
+                        ],
                         const SizedBox(width: 12),
 
                         ///This renders the live status
