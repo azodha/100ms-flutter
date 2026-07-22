@@ -63,6 +63,7 @@ class MeetingScreenController extends StatefulWidget {
   final Widget? meetingScreenAppBar;
   final Widget? preViewScreenAppBar;
   final Widget? dialInPopupWidget;
+  final Widget? reportIssueWidget;
 
   final Function(BuildContext)? onTapped;
 
@@ -84,6 +85,7 @@ class MeetingScreenController extends StatefulWidget {
     this.meetingScreenAppBar,
     this.preViewScreenAppBar,
     this.dialInPopupWidget,
+    this.reportIssueWidget,
     this.onTapped,
     this.isNoiseCancellationEnabled = false,
     required this.onRoomIdAvailable,
@@ -175,6 +177,7 @@ class _MeetingScreenControllerState extends State<MeetingScreenController> {
                         meetingScreenAppBar: widget.meetingScreenAppBar,
                         preViewScreenAppBar: widget.preViewScreenAppBar,
                         dialInPopupWidget: widget.dialInPopupWidget,
+                        reportIssueWidget: widget.reportIssueWidget,
                         onTapped: (value) {
                           widget.onTapped!(value);
                         },

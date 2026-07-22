@@ -40,6 +40,7 @@ class MeetingPage extends StatefulWidget {
   final Function(BuildContext)? onTapped;
   final Function(String roomId) onRoomIdAvailable;
   final Widget? dialInPopupWidget;
+  final Widget? reportIssueWidget;
   const MeetingPage({
     Key? key,
     this.isRoomMute = true,
@@ -50,6 +51,7 @@ class MeetingPage extends StatefulWidget {
     this.isNoiseCancellationEnabled = false,
     required this.onRoomIdAvailable,
     this.dialInPopupWidget,
+    this.reportIssueWidget,
   }) : super(key: key);
 
   @override
@@ -140,7 +142,7 @@ class _MeetingPageState extends State<MeetingPage> {
                                               Column(
                                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                 children: [
-                                                  Padding(padding: const EdgeInsets.only(left: 15, right: 15, top: 5, bottom: 2), child: ChangeNotifierProvider.value(value: _visibilityController, child: const MeetingHeader())),
+                                                  Padding(padding: const EdgeInsets.only(left: 15, right: 15, top: 5, bottom: 2), child: ChangeNotifierProvider.value(value: _visibilityController, child: MeetingHeader(reportIssueWidget: widget.reportIssueWidget))),
                                                   Padding(padding: const EdgeInsets.only(bottom: 8.0), child: ChangeNotifierProvider.value(value: _visibilityController, child: const MeetingBottomNavigationBar())),
                                                 ],
                                               ),

@@ -22,6 +22,7 @@ class PreviewMeetingFlow extends StatefulWidget {
   final Function(BuildContext)? onTapped;
   final Function(String roomId) onRoomIdAvailable;
   final Widget? dialInPopupWidget;
+  final Widget? reportIssueWidget;
   const PreviewMeetingFlow({
     super.key,
     required this.prebuiltOptions,
@@ -32,6 +33,7 @@ class PreviewMeetingFlow extends StatefulWidget {
     required this.tokenData,
     required this.onRoomIdAvailable,
     this.dialInPopupWidget,
+    this.reportIssueWidget,
   });
 
   @override
@@ -70,6 +72,7 @@ class _PreviewMeetingFlowState extends State<PreviewMeetingFlow> {
             onRoomIdAvailable: (roomId) {
               widget.onRoomIdAvailable(roomId);
             },
+            reportIssueWidget: widget.reportIssueWidget,
           )
         : ListenableProvider.value(
             value: store,
@@ -86,6 +89,7 @@ class _PreviewMeetingFlowState extends State<PreviewMeetingFlow> {
                 widget.onRoomIdAvailable(roomId);
               },
               dialInPopupWidget: widget.dialInPopupWidget,
+              reportIssueWidget: widget.reportIssueWidget,
             ),
           );
   }
