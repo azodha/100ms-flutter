@@ -117,6 +117,7 @@ class _MeetingPageState extends State<MeetingPage> {
                                     onTapped: widget.onTapped,
                                     onRoomIdAvailable: widget.onRoomIdAvailable,
                                     dialInPopupWidget: widget.dialInPopupWidget,
+                                    reportIssueWidget: widget.reportIssueWidget,
                                   )));
                         });
                       }
