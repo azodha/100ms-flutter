@@ -2,6 +2,7 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 ///Project imports
@@ -19,6 +20,7 @@ class HMSLeftRoomScreen extends StatelessWidget {
   final Function(BuildContext)? onTapped;
   final Function(String roomId) onRoomIdAvailable;
   final Widget? dialInPopupWidget;
+  final Widget? reportIssueWidget;
   const HMSLeftRoomScreen({
     super.key,
     this.isEndRoomCalled = false,
@@ -28,6 +30,7 @@ class HMSLeftRoomScreen extends StatelessWidget {
     this.doesRoleHasStreamPermission = false,
     required this.onRoomIdAvailable,
     this.dialInPopupWidget,
+    this.reportIssueWidget,
   });
 
   @override
@@ -47,10 +50,18 @@ class HMSLeftRoomScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   InkWell(
-                    onTap: () => {
-                      ///Here we reset the layout colors and pop the leave screen
-                      HMSThemeColors.resetLayoutColors(),
-                      Navigator.pop(context),
+                    onTap: () {
+                      ///Here we reset the layout colors and pop the leave screen.
+                      ///Guard the pop so that when the leave screen is the last
+                      ///route on the stack (e.g. tele was entered via a deep link
+                      ///using pushReplacement), we don't leave an empty navigator
+                      ///that renders as a blank/black screen.
+                      HMSThemeColors.resetLayoutColors();
+                      if (Navigator.canPop(context)) {
+                        Navigator.pop(context);
+                      } else {
+                        SystemNavigator.pop();
+                      }
                     },
                     child: CircleAvatar(
                       radius: 24,
@@ -139,6 +150,15 @@ class HMSLeftRoomScreen extends StatelessWidget {
                                           authToken: Constant.authToken,
                                           options: Constant.prebuiltOptions,
                                           onLeave: Constant.onLeave,
+
+                                          ///Forward the custom app bars and header
+                                          ///widgets so that the rejoined session keeps
+                                          ///the preview/meeting app bars instead of
+                                          ///rendering with no header.
+                                          meetingScreenAppBar: meetingScreenAppBar,
+                                          preViewScreenAppBar: preViewScreenAppBar,
+                                          dialInPopupWidget: dialInPopupWidget,
+                                          reportIssueWidget: reportIssueWidget,
                                           onTapped: (value) {
                                             onTapped!(value);
                                           },
