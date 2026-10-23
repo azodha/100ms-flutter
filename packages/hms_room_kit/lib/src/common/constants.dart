@@ -1,4 +1,5 @@
 //Class contains the constants used throughout the application
+import 'package:flutter/widgets.dart';
 import 'package:hms_room_kit/hms_room_kit.dart';
 import 'package:hmssdk_flutter/hmssdk_flutter.dart';
 
@@ -50,6 +51,10 @@ class Constant {
 
   ///[Constant.onLeave] is the function that you wish to execute while leaving the room
   static Function? onLeave;
+
+  ///[Constant.onLeftRoom] is called once the left room screen is shown, with a
+  ///context the app can use to show its own UI on top of it
+  static Function(BuildContext context)? onLeftRoom;
 
   ///[Constant.onPeerLeft] is the function that you wish to execute when a peer leaves the room
   static Function(HMSPeer)? onPeerLeft;

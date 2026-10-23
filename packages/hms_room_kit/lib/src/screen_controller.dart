@@ -33,6 +33,8 @@ class ScreenController extends StatefulWidget {
   ///in addition to leaving the room when the leave room button is pressed
   final Function? onLeave;
 
+  final Function(BuildContext context)? onLeftRoom;
+
   ///The app bar to be shown on the screen
   final Widget? meetingScreenAppBar;
   final Widget? preViewScreenAppBar;
@@ -53,6 +55,7 @@ class ScreenController extends StatefulWidget {
     required this.roomCode,
     this.options,
     this.onLeave,
+    this.onLeftRoom,
     this.authToken,
     this.meetingScreenAppBar,
     this.preViewScreenAppBar,
@@ -82,6 +85,7 @@ class _ScreenControllerState extends State<ScreenController> {
     Constant.roomCode = widget.roomCode;
     Constant.authToken = widget.authToken;
     Constant.onLeave = widget.onLeave;
+    Constant.onLeftRoom = widget.onLeftRoom;
     Constant.onPeerLeft = widget.onPeerLeft;
 
     ///Here we set the endPoints if it's non-null

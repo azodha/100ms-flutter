@@ -33,6 +33,10 @@ class HMSPrebuilt extends StatelessWidget {
   ///in addition to leaving the room when the leave room button is pressed
   final Function? onLeave;
 
+  ///Called once the left room screen is shown after leaving (or the room
+  ///ending), with a context the app can use to show its own UI on top of it.
+  final Function(BuildContext context)? onLeftRoom;
+
   ///The app bar to be shown on the screen
   final Widget? meetingScreenAppBar;
   final Widget? preViewScreenAppBar;
@@ -54,6 +58,7 @@ class HMSPrebuilt extends StatelessWidget {
     required this.roomCode,
     this.options,
     this.onLeave,
+    this.onLeftRoom,
     this.meetingScreenAppBar,
     this.preViewScreenAppBar,
     this.onTapped,
@@ -89,6 +94,7 @@ class HMSPrebuilt extends StatelessWidget {
       authToken: authToken,
       options: options,
       onLeave: onLeave,
+      onLeftRoom: onLeftRoom,
       meetingScreenAppBar: meetingScreenAppBar,
       preViewScreenAppBar: preViewScreenAppBar,
       onTapped: (value) {

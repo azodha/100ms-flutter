@@ -108,7 +108,8 @@ class _MeetingPageState extends State<MeetingPage> {
                       if (failureErrors.item1) {
                         WidgetsBinding.instance.addPostFrameCallback((_) {
                           context.read<MeetingStore>().removeAllBottomSheets();
-                          Navigator.of(context).pushReplacement(MaterialPageRoute(
+                          final navigator = Navigator.of(context);
+                          navigator.pushReplacement(MaterialPageRoute(
                               builder: (context) => HMSLeftRoomScreen(
                                     isEndRoomCalled: failureErrors.item3,
                                     doesRoleHasStreamPermission: failureErrors.item4,
@@ -119,6 +120,14 @@ class _MeetingPageState extends State<MeetingPage> {
                                     dialInPopupWidget: widget.dialInPopupWidget,
                                     reportIssueWidget: widget.reportIssueWidget,
                                   )));
+                          ///Let the app show its own UI over the left room screen
+                          final onLeftRoom = Constant.onLeftRoom;
+                          if (onLeftRoom != null) {
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              final overlayContext = navigator.overlay?.context;
+                              if (overlayContext != null && overlayContext.mounted) onLeftRoom(overlayContext);
+                            });
+                          }
                         });
                       }
                       return Selector<MeetingStore, bool>(
