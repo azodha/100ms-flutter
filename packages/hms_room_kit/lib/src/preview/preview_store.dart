@@ -61,6 +61,8 @@ class PreviewStore extends ChangeNotifier
   @override
   void onHMSError({required HMSException error}) {
     this.error = error;
+    Constant.onError?.call(error);
+    HMSLogger().logError('Preview error: [${error.code?.errorCode}] ${error.description}');
     notifyListeners();
   }
 
@@ -126,8 +128,22 @@ class PreviewStore extends ChangeNotifier
       Constant.webRTCLogLevel,
       Constant.sdkLogLevel,
     );
+    ///Removing before adding guards against duplicate callbacks when
+    ///[startPreview] is called again on retry while already registered
+    hmsSDKInteractor.removePreviewListener(this);
     hmsSDKInteractor.addPreviewListener(this);
     hmsSDKInteractor.preview(config: joinRoomConfig);
+  }
+
+  ///[retryPreview] clears the current error and starts the preview again
+  ///This is used when the user taps "Try again" on the preview error toast
+  void retryPreview({
+    required String userName,
+    required String tokenData,
+  }) {
+    error = null;
+    notifyListeners();
+    startPreview(userName: userName, tokenData: tokenData);
   }
 
   @override

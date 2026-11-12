@@ -50,6 +50,8 @@ class ScreenController extends StatefulWidget {
 
   final Function(HMSPeer)? onPeerLeft;
 
+  final Function(HMSException)? onError;
+
   const ScreenController({
     super.key,
     required this.roomCode,
@@ -64,6 +66,7 @@ class ScreenController extends StatefulWidget {
     this.dialInPopupWidget,
     this.reportIssueWidget,
     this.onPeerLeft,
+    this.onError,
   });
   @override
   State<ScreenController> createState() => _ScreenControllerState();
@@ -87,6 +90,7 @@ class _ScreenControllerState extends State<ScreenController> {
     Constant.onLeave = widget.onLeave;
     Constant.onLeftRoom = widget.onLeftRoom;
     Constant.onPeerLeft = widget.onPeerLeft;
+    Constant.onError = widget.onError;
 
     ///Here we set the endPoints if it's non-null
     if (widget.options?.endPoints != null) {
@@ -97,6 +101,12 @@ class _ScreenControllerState extends State<ScreenController> {
       Constant.layoutAPIEndPoint = null;
     }
     _checkPermissions();
+  }
+
+  @override
+  void dispose() {
+    Constant.onError = null;
+    super.dispose();
   }
 
   ///This function sets the end points for the app
@@ -188,13 +198,16 @@ class _ScreenControllerState extends State<ScreenController> {
     ///If fetching auth token fails then we show the error dialog
     ///with the error message and description
     if (ans != null && mounted) {
+      Constant.onError?.call(ans);
       showGeneralDialog(
         context: context,
         pageBuilder: (_, data, __) {
           return UtilityComponents.showFailureError(
             ans,
             context,
-            () => Navigator.of(context).popUntil((route) => route.isFirst),
+            () => Navigator.of(context)
+              ..pop()
+              ..pop(),
           );
         },
       );

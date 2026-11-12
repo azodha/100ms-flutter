@@ -125,7 +125,31 @@ class _PreviewPageState extends State<PreviewPage> {
               resizeToAvoidBottomInset: false,
               backgroundColor: HMSThemeColors.backgroundDim,
               body: (previewStore.peer == null)
-                  ? const HMSLoader()
+                  ? (error != null
+                      ? Stack(
+                          children: [
+                            Positioned.fill(
+                              child: UtilityComponents.showPreviewFailureError(
+                                context,
+                                () => previewStore.retryPreview(
+                                  userName: nameController.text.trim(),
+                                  tokenData: widget.tokenData,
+                                ),
+                              ),
+                            ),
+                            Positioned(
+                              top: Platform.isIOS ? 50 : 35,
+                              left: 10,
+                              child: HMSBackButton(
+                                onPressed: () {
+                                  previewStore.leave();
+                                  Navigator.pop(context);
+                                },
+                              ),
+                            ),
+                          ],
+                        )
+                      : const HMSLoader())
                   /**
                      * This component is used to render the video if the role has permission to publish video.
                      * For hls-viewer role or role without video publishing permission we just render an empty container with screen height and width
@@ -320,11 +344,10 @@ class _PreviewPageState extends State<PreviewPage> {
                               : const SizedBox(),
                         ),
                         if (error != null)
-                          UtilityComponents.showFailureError(
-                              error,
-                              context,
-                              () => Navigator.of(context)
-                                  .popUntil((route) => route.isFirst)),
+                          UtilityComponents.showFailureError(error, context, () {
+                            previewStore.leave();
+                            Navigator.of(context).pop();
+                          }),
                       ],
                     ),
             );
