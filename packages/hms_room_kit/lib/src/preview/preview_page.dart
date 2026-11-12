@@ -121,16 +121,6 @@ class _PreviewPageState extends State<PreviewPage> {
       child: Selector<PreviewStore, HMSException?>(
           selector: (_, previewStore) => previewStore.error,
           builder: (_, error, __) {
-            // TODO(debug): force error screen for preview/testing — remove before merging
-            if (previewStore.peer == null) {
-              error ??= HMSException(
-                message: 'Test error',
-                description: 'This is a test error to preview the error screen UI.',
-                action: 'Please check your network connection and try again.',
-                isTerminal: true,
-                canRetry: true,
-              );
-            }
             return Scaffold(
               resizeToAvoidBottomInset: false,
               backgroundColor: HMSThemeColors.backgroundDim,

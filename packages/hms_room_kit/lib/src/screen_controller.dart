@@ -103,6 +103,12 @@ class _ScreenControllerState extends State<ScreenController> {
     _checkPermissions();
   }
 
+  @override
+  void dispose() {
+    Constant.onError = null;
+    super.dispose();
+  }
+
   ///This function sets the end points for the app
   ///If the endPoints were set from the [HMSPrebuiltOptions]
   void _setEndPoints(Map<String, String> endPoints) {
