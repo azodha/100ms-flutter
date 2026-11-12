@@ -199,7 +199,9 @@ class _ScreenControllerState extends State<ScreenController> {
           return UtilityComponents.showFailureError(
             ans,
             context,
-            () => Navigator.of(context).pop(),
+            () => Navigator.of(context)
+              ..pop()
+              ..pop(),
           );
         },
       );

@@ -21,6 +21,7 @@ import 'package:hms_room_kit/src/widgets/common_widgets/hms_subtitle_text.dart';
 import 'package:hms_room_kit/src/widgets/common_widgets/hms_title_text.dart';
 import 'package:hms_room_kit/src/meeting/meeting_store.dart';
 import 'package:hms_room_kit/src/widgets/toasts/hms_disconnected_toast.dart';
+import 'package:hms_room_kit/src/widgets/toasts/hms_preview_error_toast.dart';
 import 'package:hms_room_kit/src/widgets/toasts/hms_reconnection_toast.dart';
 import 'package:hms_room_kit/src/widgets/common_widgets/hms_text_style.dart';
 
@@ -1182,6 +1183,26 @@ class UtilityComponents {
         errorDescription:
             "CODE: ${exception.code?.errorCode}, ${exception.description}",
         onLeavePressed: onLeavePressed,
+      ),
+    );
+  }
+
+  ///This returns the error toast shown on the preview screen when
+  ///the user fails to join the meeting, with a "Try again" action
+  static Widget showPreviewFailureError(
+    BuildContext context,
+    Function onRetryPressed,
+  ) {
+    return Align(
+      alignment: Alignment.bottomCenter,
+      child: Container(
+        color: HMSThemeColors.backgroundDim,
+        child: SafeArea(
+          top: false,
+          child: HMSPreviewErrorToast(
+            onRetryPressed: onRetryPressed,
+          ),
+        ),
       ),
     );
   }

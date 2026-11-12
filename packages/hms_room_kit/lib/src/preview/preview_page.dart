@@ -121,6 +121,16 @@ class _PreviewPageState extends State<PreviewPage> {
       child: Selector<PreviewStore, HMSException?>(
           selector: (_, previewStore) => previewStore.error,
           builder: (_, error, __) {
+            // TODO(debug): force error screen for preview/testing — remove before merging
+            if (previewStore.peer == null) {
+              error ??= HMSException(
+                message: 'Test error',
+                description: 'This is a test error to preview the error screen UI.',
+                action: 'Please check your network connection and try again.',
+                isTerminal: true,
+                canRetry: true,
+              );
+            }
             return Scaffold(
               resizeToAvoidBottomInset: false,
               backgroundColor: HMSThemeColors.backgroundDim,
@@ -128,20 +138,24 @@ class _PreviewPageState extends State<PreviewPage> {
                   ? (error != null
                       ? Stack(
                           children: [
+                            Positioned.fill(
+                              child: UtilityComponents.showPreviewFailureError(
+                                context,
+                                () => previewStore.retryPreview(
+                                  userName: nameController.text.trim(),
+                                  tokenData: widget.tokenData,
+                                ),
+                              ),
+                            ),
                             Positioned(
                               top: Platform.isIOS ? 50 : 35,
                               left: 10,
                               child: HMSBackButton(
-                                onPressed: () => {
-                                  previewStore.leave(),
-                                  Navigator.pop(context),
+                                onPressed: () {
+                                  previewStore.leave();
+                                  Navigator.pop(context);
                                 },
                               ),
-                            ),
-                            UtilityComponents.showFailureError(
-                              error,
-                              context,
-                              () => Navigator.of(context).pop(),
                             ),
                           ],
                         )
@@ -340,10 +354,10 @@ class _PreviewPageState extends State<PreviewPage> {
                               : const SizedBox(),
                         ),
                         if (error != null)
-                          UtilityComponents.showFailureError(
-                              error,
-                              context,
-                              () => Navigator.of(context).pop()),
+                          UtilityComponents.showFailureError(error, context, () {
+                            previewStore.leave();
+                            Navigator.of(context).pop();
+                          }),
                       ],
                     ),
             );

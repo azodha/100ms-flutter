@@ -16,10 +16,8 @@ export 'package:hms_room_kit/src/layout_api/hms_theme_colors.dart';
 export 'package:hms_room_kit/src/widgets/common_widgets/hms_text_style.dart';
 
 /// HMSSDK exports
-export 'package:hmssdk_flutter/src/exceptions/hms_exception.dart';
-export 'package:hmssdk_flutter/src/model/hms_peer.dart';
-export 'package:hmssdk_flutter/src/model/hms_ios_screenshare_config.dart';
-export 'package:hmssdk_flutter/src/enum/hms_audio_mode.dart';
+export 'package:hmssdk_flutter/hmssdk_flutter.dart'
+    show HMSException, HMSPeer, HMSIOSScreenshareConfig, HMSAudioMode;
 
 /// UI Component exports
 export 'package:hms_room_kit/src/widgets/common_widgets/hms_title_text.dart';
