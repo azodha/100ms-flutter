@@ -17,7 +17,7 @@ export 'package:hms_room_kit/src/widgets/common_widgets/hms_text_style.dart';
 
 /// HMSSDK exports
 export 'package:hmssdk_flutter/hmssdk_flutter.dart'
-    show HMSException, HMSPeer, HMSIOSScreenshareConfig, HMSAudioMode;
+    show HMSException, HMSPeer, HMSIOSScreenshareConfig, HMSAudioMode, HMSSDK;
 
 /// UI Component exports
 export 'package:hms_room_kit/src/widgets/common_widgets/hms_title_text.dart';
