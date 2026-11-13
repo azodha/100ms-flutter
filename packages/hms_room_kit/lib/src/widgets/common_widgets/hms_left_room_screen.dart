@@ -150,6 +150,9 @@ class HMSLeftRoomScreen extends StatelessWidget {
                                           authToken: Constant.authToken,
                                           options: Constant.prebuiltOptions,
                                           onLeave: Constant.onLeave,
+                                          onLeftRoom: Constant.onLeftRoom,
+                                          onPeerLeft: Constant.onPeerLeft,
+                                          onError: Constant.onError,
 
                                           ///Forward the custom app bars and header
                                           ///widgets so that the rejoined session keeps
