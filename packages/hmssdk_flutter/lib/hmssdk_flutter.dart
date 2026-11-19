@@ -135,6 +135,3 @@ export 'src/ui/meeting/hms_texture_view.dart';
 export 'src/ui/meeting/hms_video_view.dart';
 export 'src/ui/meeting/hms_hls_player.dart';
 export 'src/ui/meeting/hms_texture_view_controller.dart';
-
-// DEM-3564: iOS audio-session repair / diagnostics
-export 'src/service/hms_audio_session_health.dart';

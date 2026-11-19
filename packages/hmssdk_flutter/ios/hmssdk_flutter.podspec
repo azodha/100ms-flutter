@@ -16,8 +16,6 @@ Pod::Spec.new do |s|
   s.source_files = 'Classes/**/*'
   s.dependency 'Flutter'
   s.dependency "HMSSDK", sdkVersions["ios"]
-  # Version is pinned by HMSSDK; listed so HMSAudioSessionHealth can import it.
-  s.dependency 'HMSWebRTC'
   s.dependency 'HMSBroadcastExtensionSDK', sdkVersions['iOSBroadcastExtension']
   s.dependency 'HMSHLSPlayerSDK', sdkVersions['iOSHLSPlayerSDK']
   s.dependency 'HMSNoiseCancellationModels', sdkVersions['iOSNoiseCancellationModels']
