@@ -430,8 +430,21 @@ class MeetingStore extends ChangeNotifier
       return;
     }
 
-    // Not expected to send: track muted, reconnecting, or first sample.
-    if (track.isMute || reconnecting || isRoomEnded || previous == null) {
+    // Muting ends the current incident: a stall after unmuting starts again
+    // with the light repair and the short threshold.
+    if (track.isMute && !_silentMicReportInFlight) {
+      _silentMicReports = 0;
+      _silentMicUnresolved = false;
+      _silentMicIncidentStart = null;
+    }
+
+    // Not expected to send: track muted, reconnecting, app not in the
+    // foreground (phone call, Siri, background), or first sample.
+    if (track.isMute ||
+        reconnecting ||
+        isRoomEnded ||
+        previous == null ||
+        WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) {
       _localAudioStalledSince = null;
       return;
     }
@@ -463,11 +476,19 @@ class MeetingStore extends ChangeNotifier
     try {
       // Logging is rate-limited inside HMSAudioRecovery (one combined line
       // for a few attempts per incident), so nothing is logged here.
-      await HMSAudioRecovery.onSilentMic(attempt, details: {
+      final attempted = await HMSAudioRecovery.onSilentMic(attempt, details: {
         'stalled_ms': stalledFor.inMilliseconds,
         'bytes_sent': stats.bytesSent,
         'bitrate': stats.bitrate,
       });
+      // Skipped (e.g. an audio interruption is active): not a silent mic.
+      if (!attempted) {
+        _silentMicReports--;
+        if (_silentMicReports == 0) {
+          _silentMicUnresolved = false;
+          _silentMicIncidentStart = null;
+        }
+      }
     } finally {
       // Start a fresh observation window after each report.
       _lastLocalAudioBytesSent = null;
@@ -642,21 +663,12 @@ class MeetingStore extends ChangeNotifier
     notifyListeners();
   }
 
-  void attachStatsListener() {
-    if (isStatsVisible) {
-      return;
-    } else {
-      _hmsSDKInteractor.addStatsListener(this);
-    }
-  }
+  ///Stats are always on during a call (attached on join for bitrate logging
+  ///and the silent-mic watchdog, removed on leave), so Stats for Nerds must
+  ///not attach a duplicate or turn them off when it closes (DEM-3564).
+  void attachStatsListener() {}
 
-  void removeStatsListener() {
-    if (isStatsVisible) {
-      return;
-    } else {
-      _hmsSDKInteractor.removeStatsListener(this);
-    }
-  }
+  void removeStatsListener() {}
 
   void changeRoleOfPeer({
     required HMSPeer peer,

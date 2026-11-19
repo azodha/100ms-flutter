@@ -32,23 +32,38 @@ final class HMSAudioSessionHealth: NSObject {
 
     private static let maxBufferedEvents = 50
 
-    private let channel: FlutterMethodChannel
+    /// Delay between stopping WebRTC's audio unit and deactivating the
+    /// session: the stop runs on WebRTC's worker thread, and deactivating
+    /// while the VoIP unit still does I/O fails with "session busy".
+    private static let unitStopDelay: TimeInterval = 0.5
+
+    private var channels = [FlutterMethodChannel]()
     private let eventsQueue = DispatchQueue(label: "live.100ms.audio-session-health")
     private var bufferedEvents = [[String: Any]]()
 
+    /// True between interruption began/ended: iOS owns the mic (phone call,
+    /// Siri), so a silent mic is expected and must not be "repaired".
+    private static var isInterrupted = false
+
+    /// Called for every FlutterEngine that registers the plugin. Observers and
+    /// the event buffer are shared; each engine gets its own channel.
     static func register(with registrar: FlutterPluginRegistrar) {
-        guard shared == nil else { return }
-        let channel = FlutterMethodChannel(name: channelName, binaryMessenger: registrar.messenger())
-        let instance = HMSAudioSessionHealth(channel: channel)
-        channel.setMethodCallHandler { [weak instance] call, result in
-            instance?.handle(call, result: result) ?? result(FlutterMethodNotImplemented)
+        let instance: HMSAudioSessionHealth
+        if let existing = shared {
+            instance = existing
+        } else {
+            instance = HMSAudioSessionHealth()
+            instance.startObserving()
+            shared = instance
         }
-        instance.startObserving()
-        shared = instance
+        let channel = FlutterMethodChannel(name: channelName, binaryMessenger: registrar.messenger())
+        channel.setMethodCallHandler { call, result in
+            instance.handle(call, result: result)
+        }
+        instance.channels.append(channel)
     }
 
-    private init(channel: FlutterMethodChannel) {
-        self.channel = channel
+    private override init() {
         super.init()
     }
 
@@ -63,7 +78,7 @@ final class HMSAudioSessionHealth: NSObject {
             result(drainEvents())
         case "recover":
             let fullReset = args?["fullReset"] as? Bool ?? false
-            result(HMSAudioSessionHealth.restartAudioUnit(fullReset: fullReset))
+            HMSAudioSessionHealth.restartAudioUnit(fullReset: fullReset, completion: result)
         case "resetForCall":
             result(HMSAudioSessionHealth.resetForCall())
         default:
@@ -77,70 +92,127 @@ final class HMSAudioSessionHealth: NSObject {
     /// that brings the mic back. Toggling `isAudioEnabled` (only honoured with
     /// `useManualAudio`) makes WebRTC stop + uninitialize the audio unit and
     /// then initialize + start it again on a re-asserted voice-call session.
-    /// `fullReset` also deactivates the AVAudioSession while the unit is
+    /// `fullReset` also deactivates the AVAudioSession once the unit has
     /// stopped, so iOS hands the session back from whatever owner left it
-    /// unusable. The original `useManualAudio` is restored afterwards.
-    private static func restartAudioUnit(fullReset: Bool) -> [String: Any] {
+    /// unusable. The original `useManualAudio` / `isAudioEnabled` are restored
+    /// and the current category options and output route are kept.
+    ///
+    /// Skipped (`skipped` in the result) during an audio interruption, or when
+    /// the app drives WebRTC audio itself and has audio disabled (CallKit
+    /// style: `useManualAudio` on, `isAudioEnabled` off).
+    private static func restartAudioUnit(fullReset: Bool, completion: @escaping FlutterResult) {
         let rtc = HMSRTCAudioSession.sharedInstance()
         let before = snapshot()
+        if isInterrupted {
+            completion(["skipped": "interrupted", "before": before])
+            return
+        }
         let wasManualAudio = rtc.useManualAudio
+        let wasAudioEnabled = rtc.isAudioEnabled
+        if wasManualAudio && !wasAudioEnabled {
+            completion(["skipped": "audio_disabled_by_app", "before": before])
+            return
+        }
+        let previousOutputs = AVAudioSession.sharedInstance().currentRoute.outputs.map { $0.portType }
 
+        // Stop the unit; unlock so WebRTC's worker thread can do the stop.
         rtc.lockForConfiguration()
-        rtc.canUseMic = true
         rtc.useManualAudio = true
         rtc.isAudioEnabled = false
-        var errors = [String]()
-        if fullReset {
-            // Failing here is fine - e.g. the session was not active.
-            try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
-        }
-        do {
-            try rtc.setCategory(.playAndRecord, mode: .voiceChat, options: callCategoryOptions)
-        } catch {
-            errors.append("setCategory: \(error.localizedDescription)")
-        }
-        do {
-            // Raw activation: RTCAudioSession.setActive skips the real call if
-            // its (possibly stale) bookkeeping already thinks it is active.
-            try AVAudioSession.sharedInstance().setActive(true)
-        } catch {
-            errors.append("setActive: \(error.localizedDescription)")
-        }
-        rtc.isAudioEnabled = true
-        rtc.useManualAudio = wasManualAudio
         rtc.unlockForConfiguration()
 
-        var payload: [String: Any] = ["fullReset": fullReset, "before": before, "after": snapshot()]
-        if !errors.isEmpty {
-            payload["error"] = errors.joined(separator: "; ")
+        let restart = {
+            let session = AVAudioSession.sharedInstance()
+            var errors = [String]()
+            rtc.lockForConfiguration()
+            rtc.canUseMic = true
+            if fullReset {
+                do {
+                    try session.setActive(false, options: .notifyOthersOnDeactivation)
+                } catch {
+                    errors.append("deactivate: \(error.localizedDescription)")
+                }
+            }
+            do {
+                try rtc.setCategory(.playAndRecord, mode: currentCallMode(), options: currentCallOptions())
+            } catch {
+                errors.append("setCategory: \(error.localizedDescription)")
+            }
+            do {
+                // Raw activation: RTCAudioSession.setActive skips the real call if
+                // its bookkeeping already thinks it is active. Mid-call that
+                // bookkeeping is active, so its activation count stays correct.
+                try session.setActive(true)
+            } catch {
+                errors.append("setActive: \(error.localizedDescription)")
+            }
+            restoreOutput(previousOutputs)
+            // Starts the unit again. Equals the original value: with manual
+            // audio it was true (else skipped above); without, it is ignored.
+            rtc.isAudioEnabled = true
+            rtc.useManualAudio = wasManualAudio
+            rtc.unlockForConfiguration()
+
+            var payload: [String: Any] = ["fullReset": fullReset, "before": before, "after": snapshot()]
+            if !errors.isEmpty {
+                payload["error"] = errors.joined(separator: "; ")
+            }
+            completion(payload)
         }
-        return payload
+        if fullReset {
+            DispatchQueue.main.asyncAfter(deadline: .now() + unitStopDelay, execute: restart)
+        } else {
+            restart()
+        }
     }
 
-    /// Full session reset before a new preview captures the mic. Used only
-    /// after a silent mic was seen earlier in this process.
+    /// Mode/options of the current call session, so a repair does not change
+    /// what the SDK or user chose; falls back to voice-call defaults.
+    private static func currentCallMode() -> AVAudioSession.Mode {
+        let session = AVAudioSession.sharedInstance()
+        return session.category == .playAndRecord ? session.mode : .voiceChat
+    }
+
+    private static func currentCallOptions() -> AVAudioSession.CategoryOptions {
+        let session = AVAudioSession.sharedInstance()
+        return session.category == .playAndRecord ? session.categoryOptions : callCategoryOptions
+    }
+
+    /// Re-applies a loudspeaker / earpiece choice that the category reset
+    /// dropped. Other routes (Bluetooth, wired) are picked by iOS itself.
+    private static func restoreOutput(_ previous: [AVAudioSession.Port]) {
+        let session = AVAudioSession.sharedInstance()
+        let now = session.currentRoute.outputs.map { $0.portType }
+        if previous.contains(.builtInSpeaker) && !now.contains(.builtInSpeaker) {
+            try? session.overrideOutputAudioPort(.speaker)
+        } else if previous.contains(.builtInReceiver) && now.contains(.builtInSpeaker) {
+            try? session.overrideOutputAudioPort(.none)
+        }
+    }
+
+    /// Session reset before a new preview captures the mic. Used only after
+    /// a silent mic was seen earlier in this process. The session is left
+    /// inactive: WebRTC activates it through RTCAudioSession when the preview
+    /// starts audio, so its bookkeeping stays correct and nothing stays
+    /// active if the user backs out of the preview.
     private static func resetForCall() -> [String: Any] {
         let session = AVAudioSession.sharedInstance()
         let before = snapshot()
         let rtc = HMSRTCAudioSession.sharedInstance()
         rtc.lockForConfiguration()
         rtc.canUseMic = true
-        if rtc.useManualAudio && !rtc.isAudioEnabled {
-            rtc.isAudioEnabled = true
-        }
         rtc.unlockForConfiguration()
 
         var errors = [String]()
-        try? session.setActive(false, options: .notifyOthersOnDeactivation)
+        do {
+            try session.setActive(false, options: .notifyOthersOnDeactivation)
+        } catch {
+            errors.append("deactivate: \(error.localizedDescription)")
+        }
         do {
             try session.setCategory(.playAndRecord, mode: .voiceChat, options: callCategoryOptions)
         } catch {
             errors.append("setCategory: \(error.localizedDescription)")
-        }
-        do {
-            try session.setActive(true)
-        } catch {
-            errors.append("setActive: \(error.localizedDescription)")
         }
         var payload: [String: Any] = ["before": before, "after": snapshot()]
         if !errors.isEmpty {
@@ -162,6 +234,7 @@ final class HMSAudioSessionHealth: NSObject {
             "outputs": session.currentRoute.outputs.map { $0.portType.rawValue },
             "otherAudioPlaying": session.isOtherAudioPlaying,
             "recordPermission": recordPermissionString(),
+            "interrupted": isInterrupted,
             "webrtc": [
                 "isActive": rtc.isActive,
                 "useManualAudio": rtc.useManualAudio,
@@ -187,6 +260,7 @@ final class HMSAudioSessionHealth: NSObject {
         center.addObserver(self, selector: #selector(handleRouteChange(_:)), name: AVAudioSession.routeChangeNotification, object: session)
         center.addObserver(self, selector: #selector(handleMediaServicesLost(_:)), name: AVAudioSession.mediaServicesWereLostNotification, object: session)
         center.addObserver(self, selector: #selector(handleMediaServicesReset(_:)), name: AVAudioSession.mediaServicesWereResetNotification, object: session)
+        center.addObserver(self, selector: #selector(handleDidBecomeActive(_:)), name: UIApplication.didBecomeActiveNotification, object: nil)
     }
 
     private func record(_ payload: [String: Any]) {
@@ -219,6 +293,7 @@ final class HMSAudioSessionHealth: NSObject {
         guard let info = notification.userInfo,
               let typeValue = info[AVAudioSessionInterruptionTypeKey] as? UInt,
               let type = AVAudioSession.InterruptionType(rawValue: typeValue) else { return }
+        HMSAudioSessionHealth.isInterrupted = type == .began
         var payload: [String: Any] = ["event": type == .began ? "interruption_began" : "interruption_ended"]
         if type == .ended, let optionsValue = info[AVAudioSessionInterruptionOptionKey] as? UInt {
             payload["shouldResume"] = AVAudioSession.InterruptionOptions(rawValue: optionsValue).contains(.shouldResume)
@@ -256,7 +331,14 @@ final class HMSAudioSessionHealth: NSObject {
         record(["event": "media_services_lost"])
     }
 
+    /// iOS does not always post "interruption ended"; back in the foreground
+    /// the interruption is over.
+    @objc private func handleDidBecomeActive(_ notification: Notification) {
+        HMSAudioSessionHealth.isInterrupted = false
+    }
+
     @objc private func handleMediaServicesReset(_ notification: Notification) {
+        HMSAudioSessionHealth.isInterrupted = false
         record(["event": "media_services_reset"])
     }
 }

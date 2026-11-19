@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:hms_room_kit/src/services/hms_logger.dart';
@@ -16,21 +17,20 @@ class HMSAudioRecovery {
   ///Set once a silent mic is seen; the next preview then resets the session.
   static bool _resetBeforeNextPreview = false;
 
-  ///Awaited before a new preview captures the mic. Logs the audio events since
-  ///the last call and the current state; after a silent mic earlier in this
-  ///process it fully resets the audio session first. Never throws.
+  ///Awaited before a new preview captures the mic. Normally it only logs the
+  ///audio events since the last call and the current state, without blocking
+  ///the preview. After a silent mic earlier in this process it resets the
+  ///audio session first. Never throws.
   static Future<void> beforePreview() async {
     if (!Platform.isIOS) {
       return;
     }
+    if (!_resetBeforeNextPreview) {
+      unawaited(_logStateBeforePreview());
+      return;
+    }
     try {
       final events = await HMSAudioSessionHealth.drainEvents();
-      if (!_resetBeforeNextPreview) {
-        final state = await HMSAudioSessionHealth.getState();
-        HMSLogger().logAudioHealth('Audio state before preview',
-            data: {'state': state, 'events': events});
-        return;
-      }
       _resetBeforeNextPreview = false;
       final result = await HMSAudioSessionHealth.resetForCall();
       HMSLogger().logAudioHealth(
@@ -43,21 +43,35 @@ class HMSAudioRecovery {
     }
   }
 
+  static Future<void> _logStateBeforePreview() async {
+    try {
+      final events = await HMSAudioSessionHealth.drainEvents();
+      final state = await HMSAudioSessionHealth.getState();
+      HMSLogger().logAudioHealth('Audio state before preview',
+          data: {'state': state, 'events': events});
+    } catch (_) {}
+  }
+
   ///Called by the meeting watchdog each time the unmuted mic sends nothing
   ///([attempt] counts attempts of the current incident). Attempt 1 restarts
-  ///WebRTC's audio unit; 2+ also resets the `AVAudioSession`. Never throws.
-  static Future<void> onSilentMic(int attempt,
+  ///WebRTC's audio unit; 2+ also resets the `AVAudioSession`. Returns false
+  ///when nothing was done because iOS reports an active audio interruption
+  ///(phone call, Siri) or the app manages audio itself. Never throws.
+  static Future<bool> onSilentMic(int attempt,
       {Map<String, dynamic>? details}) async {
     if (!Platform.isIOS) {
-      return;
+      return false;
     }
-    _resetBeforeNextPreview = true;
     final fullReset = attempt >= 2;
     final shouldLog = attempt <= 2 || attempt % 10 == 0;
     try {
       final result = await HMSAudioSessionHealth.recover(fullReset: fullReset);
+      if (result?['skipped'] != null) {
+        return false;
+      }
+      _resetBeforeNextPreview = true;
       if (!shouldLog) {
-        return;
+        return true;
       }
       // Drained only when logging, so skipped attempts' events stay buffered.
       final events = await HMSAudioSessionHealth.drainEvents();
@@ -76,5 +90,6 @@ class HMSAudioRecovery {
             warning: true, data: {'attempt': attempt, 'error': e.toString()});
       }
     }
+    return true;
   }
 }
