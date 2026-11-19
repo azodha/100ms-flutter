@@ -663,12 +663,21 @@ class MeetingStore extends ChangeNotifier
     notifyListeners();
   }
 
-  ///Stats are always on during a call (attached on join for bitrate logging
-  ///and the silent-mic watchdog, removed on leave), so Stats for Nerds must
-  ///not attach a duplicate or turn them off when it closes (DEM-3564).
-  void attachStatsListener() {}
+  void attachStatsListener() {
+    if (isStatsVisible) {
+      return;
+    } else {
+      _hmsSDKInteractor.addStatsListener(this);
+    }
+  }
 
-  void removeStatsListener() {}
+  void removeStatsListener() {
+    if (isStatsVisible) {
+      return;
+    } else {
+      _hmsSDKInteractor.removeStatsListener(this);
+    }
+  }
 
   void changeRoleOfPeer({
     required HMSPeer peer,
