@@ -346,6 +346,7 @@ class MeetingStore extends ChangeNotifier
   //HMSSDK Methods
 
   void leave() async {
+    _cancelSilentMicRepair();
     _hmsSDKInteractor.removeStatsListener(this);
     WidgetsBinding.instance.removeObserver(this);
     hmsException = null;
@@ -391,8 +392,11 @@ class MeetingStore extends ChangeNotifier
   int _silentMicAttempts = 0;
   bool _silentMicRepairing = false;
 
+  /// Set when the native repair is missing (stock hmssdk_flutter).
+  bool _silentMicRepairUnsupported = false;
+
   void _checkLocalAudioIsFlowing(HMSLocalAudioStats stats, HMSLocalAudioTrack track) {
-    if (!Platform.isIOS || _silentMicRepairing) {
+    if (!Platform.isIOS || _silentMicRepairing || _silentMicRepairUnsupported) {
       return;
     }
     final bytesSent = stats.bytesSent;
@@ -438,8 +442,16 @@ class MeetingStore extends ChangeNotifier
         ? _silentMicBackoffThreshold
         : _silentMicThreshold;
     final stalledFor = now.difference(_localAudioStalledSince!);
-    if (stalledFor >= threshold) {
+    if (stalledFor >= threshold && !isRoomEnded) {
+      _silentMicIncidentStart ??= _localAudioStalledSince;
       unawaited(_repairSilentMic(stats, stalledFor));
+    }
+  }
+
+  /// Drops a native restart still waiting to run (DEM-3564).
+  void _cancelSilentMicRepair() {
+    if (Platform.isIOS) {
+      _audioHealthChannel.invokeMethod('cancel').catchError((_) => null);
     }
   }
 
@@ -452,16 +464,27 @@ class MeetingStore extends ChangeNotifier
       result = await _audioHealthChannel
           .invokeMethod('recover', {'fullReset': fullReset})
           .timeout(const Duration(seconds: 3));
+    } on MissingPluginException {
+      _silentMicRepairUnsupported = true;
+      HMSLogger().logAudioHealth('Silent mic: native repair unavailable',
+          warning: true, data: {'stalled_ms': stalledFor.inMilliseconds});
     } catch (e) {
       result = {'error': e.toString()};
     }
-    // Skipped natively (audio interruption / app manages audio): not counted.
+    // Skipped natively (interruption, call ended, app manages audio): not
+    // counted as an attempt.
     final skipped = result is Map && result['skipped'] != null;
-    if (!skipped) {
-      _silentMicIncidentStart ??= DateTime.now();
+    if (skipped && _silentMicAttempts == 0) {
+      _silentMicIncidentStart = null;
+    }
+    if (result != null && !skipped) {
       _silentMicAttempts = attempt;
+      final failed = result is Map && result['error'] != null;
       if (attempt <= 2 || attempt % 10 == 0) {
-        HMSLogger().logAudioHealth('Silent mic: audio engine restarted',
+        HMSLogger().logAudioHealth(
+            failed
+                ? 'Silent mic: recovery failed'
+                : 'Silent mic: audio engine restarted',
             warning: true,
             data: {
               'attempt': attempt,
@@ -1745,6 +1768,7 @@ class MeetingStore extends ChangeNotifier
     //   AppDebugConfig.isVBEnabled = false;
     // }
     ///******************************************************************* */
+    _cancelSilentMicRepair();
     _hmsSDKInteractor.destroy();
     _hmsSessionStore = null;
     peerTracks.clear();
