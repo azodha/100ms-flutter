@@ -3,7 +3,7 @@ import Flutter
 import HMSWebRTC
 import UIKit
 
-/// DEM-3564: repairs a silent mic in place. `AVAudioSession` and WebRTC's
+/// Repairs a silent mic in place. `AVAudioSession` and WebRTC's
 /// `RTCAudioSession` are process-wide and survive `HMSSDK.destroy()`, so once
 /// broken the mic sent 0 bytes until the app was killed.
 ///
@@ -66,15 +66,20 @@ final class HMSAudioSessionHealth: NSObject {
         rtc.isAudioEnabled = false
         rtc.unlockForConfiguration()
 
+        // Starts the unit again and puts back the original flags.
+        let restoreAudioUnit = {
+            rtc.isAudioEnabled = true
+            rtc.useManualAudio = wasManualAudio
+            rtc.isAudioEnabled = wasAudioEnabled
+        }
+
         let startGeneration = generation
         let restart = {
             var errors = [String]()
             rtc.lockForConfiguration()
             // Call left while waiting: restore and stop.
             guard startGeneration == generation else {
-                rtc.isAudioEnabled = true
-                rtc.useManualAudio = wasManualAudio
-                rtc.isAudioEnabled = wasAudioEnabled
+                restoreAudioUnit()
                 rtc.unlockForConfiguration()
                 completion(["skipped": "call_ended"])
                 return
@@ -85,18 +90,12 @@ final class HMSAudioSessionHealth: NSObject {
             }
             do { try rtc.setCategory(.playAndRecord, mode: mode, options: options) } catch { errors.append("setCategory: \(error.localizedDescription)") }
             // Raw activation: mid-call RTCAudioSession already counts it active.
-            // Retried once; a failure is reported so Dart logs it as failed.
-            if (try? session.setActive(true)) == nil {
-                Thread.sleep(forTimeInterval: 0.2)
-                do { try session.setActive(true) } catch { errors.append("setActive: \(error.localizedDescription)") }
-            }
+            do { try session.setActive(true) } catch { errors.append("setActive: \(error.localizedDescription)") }
             let isSpeaker = session.currentRoute.outputs.contains { $0.portType == .builtInSpeaker }
             if wasSpeaker != isSpeaker {
                 try? session.overrideOutputAudioPort(wasSpeaker ? .speaker : .none)
             }
-            rtc.isAudioEnabled = true
-            rtc.useManualAudio = wasManualAudio
-            rtc.isAudioEnabled = wasAudioEnabled
+            restoreAudioUnit()
             rtc.unlockForConfiguration()
 
             var payload: [String: Any] = ["outputs": session.currentRoute.outputs.map { $0.portType.rawValue }]

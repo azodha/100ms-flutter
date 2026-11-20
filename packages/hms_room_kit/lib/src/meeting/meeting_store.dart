@@ -346,7 +346,6 @@ class MeetingStore extends ChangeNotifier
   //HMSSDK Methods
 
   void leave() async {
-    _cancelSilentMicRepair();
     _hmsSDKInteractor.removeStatsListener(this);
     WidgetsBinding.instance.removeObserver(this);
     hmsException = null;
@@ -364,20 +363,8 @@ class MeetingStore extends ChangeNotifier
     notifyListeners();
   }
 
-  // ---------------------------------------------------------------------------
-  // Silent-mic watchdog (DEM-3564), iOS only
-  //
-  // Seen in production: the local audio track is unmuted (remote peers see
-  // the mic as "on") but the SDK sends zero audio bytes until the app is
-  // killed. Detected from `bytesSent` not increasing while the track is
-  // unmuted (not `bitrate == 0`, which Opus DTX reports during silence).
-  // Repaired natively (hmssdk_flutter `HMSAudioSessionHealth`) by restarting
-  // WebRTC's audio unit; attempt 2+ also resets the AVAudioSession. Retries
-  // every ~8 s in the first minute of an incident, then every 60 s. Logs on
-  // attempts 1, 2 and every 10th, and once when audio flows again. Mic and
-  // track state are never changed.
-  // ---------------------------------------------------------------------------
-
+  // iOS: the mic can stay unmuted while sending 0 bytes until the app is killed.
+  // Watch bytesSent, not bitrate: Opus DTX reports bitrate 0 during silence.
   static const MethodChannel _audioHealthChannel =
       MethodChannel('hmssdk_flutter/audio_session_health');
   static const Duration _silentMicThreshold = Duration(seconds: 8);
@@ -392,11 +379,13 @@ class MeetingStore extends ChangeNotifier
   int _silentMicAttempts = 0;
   bool _silentMicRepairing = false;
 
-  /// Set when the native repair is missing (stock hmssdk_flutter).
-  bool _silentMicRepairUnsupported = false;
+  void _resetSilentMicIncident() {
+    _silentMicIncidentStart = null;
+    _silentMicAttempts = 0;
+  }
 
   void _checkLocalAudioIsFlowing(HMSLocalAudioStats stats, HMSLocalAudioTrack track) {
-    if (!Platform.isIOS || _silentMicRepairing || _silentMicRepairUnsupported) {
+    if (!Platform.isIOS || _silentMicRepairing) {
       return;
     }
     final bytesSent = stats.bytesSent;
@@ -412,8 +401,7 @@ class MeetingStore extends ChangeNotifier
               DateTime.now().difference(incidentStart).inMilliseconds,
         });
       }
-      _silentMicIncidentStart = null;
-      _silentMicAttempts = 0;
+      _resetSilentMicIncident();
       _localAudioStalledSince = null;
       return;
     }
@@ -428,8 +416,7 @@ class MeetingStore extends ChangeNotifier
       _localAudioStalledSince = null;
       if (track.isMute) {
         // Muting ends the incident.
-        _silentMicIncidentStart = null;
-        _silentMicAttempts = 0;
+        _resetSilentMicIncident();
       }
       return;
     }
@@ -442,13 +429,13 @@ class MeetingStore extends ChangeNotifier
         ? _silentMicBackoffThreshold
         : _silentMicThreshold;
     final stalledFor = now.difference(_localAudioStalledSince!);
-    if (stalledFor >= threshold && !isRoomEnded) {
+    if (stalledFor >= threshold) {
       _silentMicIncidentStart ??= _localAudioStalledSince;
       unawaited(_repairSilentMic(stats, stalledFor));
     }
   }
 
-  /// Drops a native restart still waiting to run (DEM-3564).
+  /// Drops a native restart still waiting to run.
   void _cancelSilentMicRepair() {
     if (Platform.isIOS) {
       _audioHealthChannel.invokeMethod('cancel').catchError((_) => null);
@@ -464,10 +451,6 @@ class MeetingStore extends ChangeNotifier
       result = await _audioHealthChannel
           .invokeMethod('recover', {'fullReset': fullReset})
           .timeout(const Duration(seconds: 3));
-    } on MissingPluginException {
-      _silentMicRepairUnsupported = true;
-      HMSLogger().logAudioHealth('Silent mic: native repair unavailable',
-          warning: true, data: {'stalled_ms': stalledFor.inMilliseconds});
     } catch (e) {
       result = {'error': e.toString()};
     }
@@ -475,9 +458,9 @@ class MeetingStore extends ChangeNotifier
     // counted as an attempt.
     final skipped = result is Map && result['skipped'] != null;
     if (skipped && _silentMicAttempts == 0) {
-      _silentMicIncidentStart = null;
+      _resetSilentMicIncident();
     }
-    if (result != null && !skipped) {
+    if (!skipped) {
       _silentMicAttempts = attempt;
       final failed = result is Map && result['error'] != null;
       if (attempt <= 2 || attempt % 10 == 0) {
