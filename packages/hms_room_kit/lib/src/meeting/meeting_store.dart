@@ -363,6 +363,126 @@ class MeetingStore extends ChangeNotifier
     notifyListeners();
   }
 
+  // iOS: the mic can stay unmuted while sending 0 bytes until the app is killed.
+  // Watch bytesSent, not bitrate: Opus DTX reports bitrate 0 during silence.
+  static const MethodChannel _audioHealthChannel =
+      MethodChannel('hmssdk_flutter/audio_session_health');
+  static const Duration _silentMicThreshold = Duration(seconds: 8);
+  static const Duration _silentMicBackoffAfter = Duration(minutes: 1);
+  static const Duration _silentMicBackoffThreshold = Duration(seconds: 60);
+
+  int? _lastLocalAudioBytesSent;
+  DateTime? _localAudioStalledSince;
+
+  /// When the current silent-mic incident started; null when none.
+  DateTime? _silentMicIncidentStart;
+  int _silentMicAttempts = 0;
+  bool _silentMicRepairing = false;
+
+  void _resetSilentMicIncident() {
+    _silentMicIncidentStart = null;
+    _silentMicAttempts = 0;
+  }
+
+  void _checkLocalAudioIsFlowing(HMSLocalAudioStats stats, HMSLocalAudioTrack track) {
+    if (!Platform.isIOS || _silentMicRepairing) {
+      return;
+    }
+    final bytesSent = stats.bytesSent;
+    final previous = _lastLocalAudioBytesSent;
+    _lastLocalAudioBytesSent = bytesSent;
+
+    if (previous != null && bytesSent > previous) {
+      final incidentStart = _silentMicIncidentStart;
+      if (incidentStart != null) {
+        HMSLogger().logAudioHealth('Local audio recovered', data: {
+          'attempts': _silentMicAttempts,
+          'silent_for_ms':
+              DateTime.now().difference(incidentStart).inMilliseconds,
+        });
+      }
+      _resetSilentMicIncident();
+      _localAudioStalledSince = null;
+      return;
+    }
+
+    // Not expected to send: muted, reconnecting, ended, first sample, or app
+    // not in the foreground (phone call, Siri, background).
+    if (track.isMute ||
+        reconnecting ||
+        isRoomEnded ||
+        previous == null ||
+        WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) {
+      _localAudioStalledSince = null;
+      if (track.isMute) {
+        // Muting ends the incident.
+        _resetSilentMicIncident();
+      }
+      return;
+    }
+
+    final now = DateTime.now();
+    _localAudioStalledSince ??= now;
+    final incidentStart = _silentMicIncidentStart;
+    final threshold = incidentStart != null &&
+            now.difference(incidentStart) >= _silentMicBackoffAfter
+        ? _silentMicBackoffThreshold
+        : _silentMicThreshold;
+    final stalledFor = now.difference(_localAudioStalledSince!);
+    if (stalledFor >= threshold) {
+      _silentMicIncidentStart ??= _localAudioStalledSince;
+      unawaited(_repairSilentMic(stats, stalledFor));
+    }
+  }
+
+  /// Drops a native restart still waiting to run.
+  void _cancelSilentMicRepair() {
+    if (Platform.isIOS) {
+      _audioHealthChannel.invokeMethod('cancel').catchError((_) => null);
+    }
+  }
+
+  Future<void> _repairSilentMic(HMSLocalAudioStats stats, Duration stalledFor) async {
+    _silentMicRepairing = true;
+    final attempt = _silentMicAttempts + 1;
+    final fullReset = attempt >= 2;
+    Object? result;
+    try {
+      result = await _audioHealthChannel
+          .invokeMethod('recover', {'fullReset': fullReset})
+          .timeout(const Duration(seconds: 3));
+    } catch (e) {
+      result = {'error': e.toString()};
+    }
+    // Skipped natively (interruption, call ended, app manages audio): not
+    // counted as an attempt.
+    final skipped = result is Map && result['skipped'] != null;
+    if (skipped && _silentMicAttempts == 0) {
+      _resetSilentMicIncident();
+    }
+    if (!skipped) {
+      _silentMicAttempts = attempt;
+      final failed = result is Map && result['error'] != null;
+      if (attempt <= 2 || attempt % 10 == 0) {
+        HMSLogger().logAudioHealth(
+            failed
+                ? 'Silent mic: recovery failed'
+                : 'Silent mic: audio engine restarted',
+            warning: true,
+            data: {
+              'attempt': attempt,
+              'stalled_ms': stalledFor.inMilliseconds,
+              'bytes_sent': stats.bytesSent,
+              'result': result,
+            });
+      }
+    }
+    // Fresh observation window after each attempt.
+    _lastLocalAudioBytesSent = null;
+    _localAudioStalledSince = null;
+    _silentMicRepairing = false;
+  }
+
   Future<void> toggleCameraMuteState() async {
     await _hmsSDKInteractor.toggleCameraMuteState();
     isVideoOn = !isVideoOn;
@@ -1489,6 +1609,9 @@ class MeetingStore extends ChangeNotifier
       peerId: 'local',
       quality: 'audio',
     );
+    if (track.source == "REGULAR") {
+      _checkLocalAudioIsFlowing(hmsLocalAudioStats, track);
+    }
   }
 
   @override
@@ -1628,6 +1751,7 @@ class MeetingStore extends ChangeNotifier
     //   AppDebugConfig.isVBEnabled = false;
     // }
     ///******************************************************************* */
+    _cancelSilentMicRepair();
     _hmsSDKInteractor.destroy();
     _hmsSessionStore = null;
     peerTracks.clear();

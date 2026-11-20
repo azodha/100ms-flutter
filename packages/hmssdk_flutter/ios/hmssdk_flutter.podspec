@@ -14,6 +14,7 @@ Pod::Spec.new do |s|
   s.author           = { 'Yogesh Singh' => 'yogesh@100ms.live' }
   s.source           = { :git => 'https://github.com/100mslive/100ms-flutter.git' }
   s.source_files = 'Classes/**/*'
+  s.dependency 'HMSWebRTC' # version pinned by HMSSDK; used by HMSAudioSessionHealth
   s.dependency 'Flutter'
   s.dependency "HMSSDK", sdkVersions["ios"]
   s.dependency 'HMSBroadcastExtensionSDK', sdkVersions['iOSBroadcastExtension']
